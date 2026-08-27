@@ -1,0 +1,14 @@
+frontend/src/lib/components/CyberSelect.svelte
+  h_e41d77f8309f5c 51-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1beedcc64ed584b9c5d2f7818dde3604b6750b1f",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
