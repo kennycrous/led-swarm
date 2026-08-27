@@ -33,9 +33,11 @@
   import GroupCard from '$lib/components/GroupCard.svelte';
   import SceneCard from '$lib/components/SceneCard.svelte';
   import CreateGroupModal from '$lib/components/CreateGroupModal.svelte';
+  import CreateRoomModal from '$lib/components/CreateRoomModal.svelte';
   import CaptureSceneModal from '$lib/components/CaptureSceneModal.svelte';
   import StripsManagement from '$lib/components/StripsManagement.svelte';
   import CanvasEditor from '$lib/components/CanvasEditor.svelte';
+  import RoomCard from '$lib/components/RoomCard.svelte';
   import { getCanvasStore } from '$lib/stores/canvasStore.svelte.js';
 
   const store = getDeviceStore();
@@ -48,6 +50,7 @@
   let masterBrightness = $state(200);
   let isAddModalOpen = $state(false);
   let isCreateGroupModalOpen = $state(false);
+  let isCreateRoomModalOpen = $state(false);
   let isCaptureSceneModalOpen = $state(false);
   let isAddPanelModalOpen = $state(false);
   let newPanelTitle = $state('');
@@ -449,6 +452,19 @@
                         onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                         onToggleSize={(id) => cycleCardSize(id, item.size)}
                       />
+                    {:else if item.type === 'room'}
+                      <RoomCard
+                        room={item.data}
+                        devices={store.devices}
+                        placements={canvasStore.placements}
+                        isPinned={true}
+                        cardSize={item.size}
+                        onEditLayout={() => {
+                          canvasStore.selectRoom(item.data.id);
+                          activeTab = 'canvas';
+                        }}
+                        onTogglePin={() => dashboardStore.togglePin(item.data.id, 'room')}
+                      />
                     {/if}
                   </div>
                 {/each}
@@ -573,6 +589,11 @@
         <CanvasEditor
           devices={store.devices}
           placements={canvasStore.placements}
+          rooms={canvasStore.rooms}
+          currentRoomId={canvasStore.currentRoomId}
+          onSelectRoom={(id) => canvasStore.selectRoom(id)}
+          onCreateRoom={(title) => canvasStore.createRoom(title)}
+          onDeleteRoom={(id) => canvasStore.deleteRoom(id)}
           onSavePlacements={() => canvasStore.savePlacements()}
           onUpdatePlacement={(id, updates) => canvasStore.updatePlacement(id, updates)}
           onTriggerSweep={() => {
@@ -612,7 +633,7 @@
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-semibold transition-all cursor-pointer"
               >
                 <Camera class="w-4 h-4" />
-                <span>Capture Current Scene</span>
+                <span>Snapshot Scene</span>
               </button>
 
               <button
@@ -622,6 +643,38 @@
                 <Plus class="w-4 h-4" />
                 <span>Create Strip Group</span>
               </button>
+
+              <button
+                onclick={() => (isCreateRoomModalOpen = true)}
+                class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-mono text-xs font-semibold shadow-neonCyan transition-all cursor-pointer"
+              >
+                <LayoutGrid class="w-4 h-4" />
+                <span>Add 2D Room</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2D Room Canvases Grid Section -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <LayoutGrid class="w-3.5 h-3.5 text-cyan-400" />
+              2D Room Canvases ({canvasStore.rooms.length})
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {#each canvasStore.rooms as room (room.id)}
+                <RoomCard
+                  {room}
+                  devices={store.devices}
+                  placements={canvasStore.placements}
+                  isPinned={dashboardStore.isPinned(room.id)}
+                  cardSize={dashboardStore.getSize(room.id)}
+                  onEditLayout={() => {
+                    canvasStore.selectRoom(room.id);
+                    activeTab = 'canvas';
+                  }}
+                  onTogglePin={() => dashboardStore.togglePin(room.id, 'room')}
+                />
+              {/each}
             </div>
           </div>
 
@@ -716,11 +769,22 @@
   }}
 />
 
+<CreateRoomModal
+  isOpen={isCreateRoomModalOpen}
+  availableDevices={store.devices}
+  onClose={() => (isCreateRoomModalOpen = false)}
+  onCreate={(title, desc, devIds) => {
+    canvasStore.createRoom(title, desc, devIds);
+    isCreateRoomModalOpen = false;
+  }}
+/>
+
 <CaptureSceneModal
   isOpen={isCaptureSceneModalOpen}
+  groups={groupStore.groups}
   onClose={() => (isCaptureSceneModalOpen = false)}
-  onCapture={(name, icon) => {
-    groupStore.captureScene(name, icon);
+  onCapture={(name, icon, scopeType, targetId) => {
+    groupStore.captureScene(name, icon, scopeType, targetId);
     isCaptureSceneModalOpen = false;
   }}
 />

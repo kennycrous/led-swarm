@@ -29,6 +29,6 @@ describe('CaptureSceneModal.svelte', () => {
     const submitBtn = getByText('Snapshot Scene');
     await fireEvent.click(submitBtn);
 
-    expect(onCapture).toHaveBeenCalledWith('Late Night Chill', 'Sparkles');
+    expect(onCapture).toHaveBeenCalledWith('Late Night Chill', 'Sparkles', 'global', '');
   });
 });

@@ -68,6 +68,8 @@ func (s *Server) Start(port int) error {
 	mux.HandleFunc("/api/v1/dashboard/reorder", s.handleReorderDashboardItems)
 
 	// 2D Canvas API Endpoints
+	mux.HandleFunc("/api/v1/canvas/rooms", s.handleCanvasRooms)
+	mux.HandleFunc("/api/v1/canvas/rooms/", s.handleCanvasRooms)
 	mux.HandleFunc("/api/v1/canvas/placements", s.handleCanvasPlacements)
 	mux.HandleFunc("/api/v1/canvas/placement", s.handleSaveCanvasPlacement)
 	mux.HandleFunc("/api/v1/canvas/placements/batch", s.handleBatchSaveCanvasPlacements)
@@ -287,14 +289,16 @@ func (s *Server) handleCaptureScene(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		Name string `json:"name"`
-		Icon string `json:"icon"`
+		Name      string `json:"name"`
+		Icon      string `json:"icon"`
+		ScopeType string `json:"scopeType"`
+		TargetID  string `json:"targetId"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || strings.TrimSpace(req.Name) == "" {
 		http.Error(w, "Invalid scene name provided", http.StatusBadRequest)
 		return
 	}
-	sc, err := s.groupMgr.CaptureScene(req.Name, req.Icon)
+	sc, err := s.groupMgr.CaptureScopedScene(req.Name, req.Icon, req.ScopeType, req.TargetID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -474,8 +478,9 @@ func (s *Server) handleCanvasPlacements(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	roomID := r.URL.Query().Get("roomId")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(s.canvasMgr.GetPlacements())
+	json.NewEncoder(w).Encode(s.canvasMgr.GetPlacementsForRoom(roomID))
 }
 
 func (s *Server) handleSaveCanvasPlacement(w http.ResponseWriter, r *http.Request) {
@@ -501,15 +506,65 @@ func (s *Server) handleBatchSaveCanvasPlacements(w http.ResponseWriter, r *http.
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var placements []CanvasPlacement
-	if err := json.NewDecoder(r.Body).Decode(&placements); err != nil {
-		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
-		return
+	var req struct {
+		RoomID     string            `json:"roomId"`
+		Placements []CanvasPlacement `json:"placements"`
 	}
-	if err := s.canvasMgr.BatchSavePlacements(placements); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var placements []CanvasPlacement
+		if err2 := json.NewDecoder(r.Body).Decode(&placements); err2 == nil {
+			req.Placements = placements
+		}
+	}
+	if err := s.canvasMgr.BatchSavePlacements(req.RoomID, req.Placements); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (s *Server) handleCanvasRooms(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case http.MethodGet:
+		json.NewEncoder(w).Encode(s.canvasMgr.GetRooms())
+	case http.MethodPost:
+		var req struct {
+			Title       string   `json:"title"`
+			Description string   `json:"description"`
+			Width       int      `json:"width"`
+			Height      int      `json:"height"`
+			DeviceIDs   []string `json:"deviceIds"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Title == "" {
+			http.Error(w, "Invalid parameters", http.StatusBadRequest)
+			return
+		}
+		if req.Width == 0 {
+			req.Width = 2000
+		}
+		if req.Height == 0 {
+			req.Height = 1200
+		}
+		room, err := s.canvasMgr.CreateRoom(req.Title, req.Description, req.Width, req.Height, req.DeviceIDs)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(room)
+	case http.MethodDelete:
+		id := strings.TrimPrefix(r.URL.Path, "/api/v1/canvas/rooms/")
+		if id == "" {
+			http.Error(w, "Missing room ID", http.StatusBadRequest)
+			return
+		}
+		if err := s.canvasMgr.DeleteRoom(id); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }

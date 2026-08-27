@@ -164,24 +164,36 @@ CREATE TABLE IF NOT EXISTS group_devices (
     FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
 );
 
+-- 2D Canvas Rooms / Presets
+CREATE TABLE IF NOT EXISTS canvas_rooms (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    width INTEGER DEFAULT 2000,
+    height INTEGER DEFAULT 1200,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 2D Visual Layout Canvas Placements
 CREATE TABLE IF NOT EXISTS canvas_placements (
-    device_id TEXT PRIMARY KEY,
-    pos_x REAL NOT NULL DEFAULT 0.0,
-    pos_y REAL NOT NULL DEFAULT 0.0,
+    device_id TEXT NOT NULL,
+    room_id TEXT NOT NULL DEFAULT 'default',
+    pos_x REAL NOT NULL DEFAULT 100.0,
+    pos_y REAL NOT NULL DEFAULT 100.0,
     rotation REAL NOT NULL DEFAULT 0.0,
-    scale_x REAL NOT NULL DEFAULT 1.0,
-    scale_y REAL NOT NULL DEFAULT 1.0,
-    geometry_type TEXT DEFAULT 'linear', -- linear, matrix, arc
+    scale REAL NOT NULL DEFAULT 1.0,
+    geometry TEXT DEFAULT 'strip',
+    PRIMARY KEY (device_id, room_id),
     FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
 );
 
--- Saved Swarm Scenes
+-- Saved Swarm Scenes (Global or Room/Group Scoped)
 CREATE TABLE IF NOT EXISTS scenes (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     icon TEXT,
-    config_json TEXT NOT NULL,          -- Full multi-device JSON snapshot
+    scope_type TEXT DEFAULT 'global',   -- 'global', 'room', 'group'
+    target_id TEXT DEFAULT '',          -- Room ID or Group ID if scoped
+    config_json TEXT NOT NULL,          -- Targeted multi-device JSON snapshot
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```

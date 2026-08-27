@@ -86,16 +86,18 @@ export function getGroupStore() {
       }
     },
 
-    async captureScene(name, icon) {
+    async captureScene(name, icon, scopeType = 'global', targetId = '') {
       try {
         let s = null;
-        if (isWails && window.go?.main?.App?.CaptureScene) {
+        if (isWails && window.go?.main?.App?.CaptureScopedScene) {
+          s = await window.go.main.App.CaptureScopedScene(name, icon, scopeType, targetId);
+        } else if (isWails && window.go?.main?.App?.CaptureScene) {
           s = await window.go.main.App.CaptureScene(name, icon);
         } else {
           const res = await fetch('/api/v1/scenes/capture', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, icon })
+            body: JSON.stringify({ name, icon, scopeType, targetId })
           });
           if (res.ok) {
             s = await res.json();

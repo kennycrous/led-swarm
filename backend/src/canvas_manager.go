@@ -3,12 +3,15 @@ package main
 import (
 	"log"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 type CanvasManager struct {
 	db         *Database
 	hub        *Hub
-	placements map[string]CanvasPlacement
+	rooms      map[string]CanvasRoom
+	placements map[string]CanvasPlacement // Key: "roomId:deviceId"
 	mu         sync.RWMutex
 }
 
@@ -16,53 +19,107 @@ func NewCanvasManager(db *Database, hub *Hub) *CanvasManager {
 	cm := &CanvasManager{
 		db:         db,
 		hub:        hub,
+		rooms:      make(map[string]CanvasRoom),
 		placements: make(map[string]CanvasPlacement),
 	}
-	_ = cm.loadStoredPlacements()
+	_ = cm.loadStoredData()
 	return cm
 }
 
-func (cm *CanvasManager) loadStoredPlacements() error {
+func (cm *CanvasManager) loadStoredData() error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	stored, err := cm.db.GetCanvasPlacements()
-	if err != nil {
-		log.Printf("[CanvasManager] Error loading placements from database: %v", err)
-		return err
+	storedRooms, err := cm.db.GetCanvasRooms()
+	if err == nil {
+		for _, r := range storedRooms {
+			cm.rooms[r.ID] = r
+		}
 	}
 
-	for _, p := range stored {
-		cm.placements[p.DeviceID] = p
+	storedPlacements, err := cm.db.GetCanvasPlacements()
+	if err == nil {
+		for _, p := range storedPlacements {
+			if p.RoomID == "" {
+				p.RoomID = "default"
+			}
+			key := p.RoomID + ":" + p.DeviceID
+			cm.placements[key] = p
+		}
 	}
-	log.Printf("[CanvasManager] Loaded %d canvas placements from database", len(cm.placements))
+
+	log.Printf("[CanvasManager] Loaded %d canvas rooms and %d placements from database", len(cm.rooms), len(cm.placements))
 	return nil
 }
 
-func (cm *CanvasManager) GetPlacements() []CanvasPlacement {
+func (cm *CanvasManager) CreateRoom(title string, description string, width int, height int, deviceIDs []string) (CanvasRoom, error) {
+	cm.mu.Lock()
+	if width <= 0 {
+		width = 2000
+	}
+	if height <= 0 {
+		height = 1200
+	}
+	room := CanvasRoom{
+		ID:          "room-" + uuid.New().String()[:8],
+		Title:       title,
+		Description: description,
+		Width:       width,
+		Height:      height,
+	}
+	cm.rooms[room.ID] = room
+
+	// Create initial placements for assigned devices
+	for i, devID := range deviceIDs {
+		p := CanvasPlacement{
+			DeviceID: devID,
+			RoomID:   room.ID,
+			PosX:     float64(150 + (i%4)*250),
+			PosY:     float64(150 + (i/4)*180),
+			Rotation: 0,
+			Scale:    1.0,
+			Geometry: "strip",
+		}
+		key := room.ID + ":" + devID
+		cm.placements[key] = p
+		_ = cm.db.SaveCanvasPlacement(p)
+	}
+	cm.mu.Unlock()
+
+	if err := cm.db.SaveCanvasRoom(room); err != nil {
+		return CanvasRoom{}, err
+	}
+
+	cm.broadcastCanvasUpdate()
+	return room, nil
+}
+
+func (cm *CanvasManager) GetRooms() []CanvasRoom {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
 
-	res := make([]CanvasPlacement, 0, len(cm.placements))
-	for _, p := range cm.placements {
-		res = append(res, p)
+	res := make([]CanvasRoom, 0, len(cm.rooms))
+	for _, r := range cm.rooms {
+		res = append(res, r)
+	}
+	if len(res) == 0 {
+		// Provide default room if empty
+		res = append(res, CanvasRoom{ID: "default", Title: "Main Room Canvas", Width: 2000, Height: 1200})
 	}
 	return res
 }
 
-func (cm *CanvasManager) SavePlacement(p CanvasPlacement) error {
+func (cm *CanvasManager) DeleteRoom(id string) error {
 	cm.mu.Lock()
-	if p.Geometry == "" {
-		p.Geometry = "strip"
+	delete(cm.rooms, id)
+	for key, p := range cm.placements {
+		if p.RoomID == id {
+			delete(cm.placements, key)
+		}
 	}
-	if p.Scale <= 0 {
-		p.Scale = 1.0
-	}
-	cm.placements[p.DeviceID] = p
 	cm.mu.Unlock()
 
-	if err := cm.db.SaveCanvasPlacement(p); err != nil {
-		log.Printf("[CanvasManager] Error saving placement for %s: %v", p.DeviceID, err)
+	if err := cm.db.DeleteCanvasRoom(id); err != nil {
 		return err
 	}
 
@@ -70,16 +127,62 @@ func (cm *CanvasManager) SavePlacement(p CanvasPlacement) error {
 	return nil
 }
 
-func (cm *CanvasManager) BatchSavePlacements(placements []CanvasPlacement) error {
+func (cm *CanvasManager) GetPlacementsForRoom(roomID string) []CanvasPlacement {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+
+	if roomID == "" {
+		roomID = "default"
+	}
+
+	res := make([]CanvasPlacement, 0)
+	for _, p := range cm.placements {
+		if p.RoomID == roomID || (roomID == "default" && (p.RoomID == "" || p.RoomID == "default")) {
+			res = append(res, p)
+		}
+	}
+	return res
+}
+
+func (cm *CanvasManager) SavePlacement(p CanvasPlacement) error {
+	cm.mu.Lock()
+	if p.RoomID == "" {
+		p.RoomID = "default"
+	}
+	if p.Geometry == "" {
+		p.Geometry = "strip"
+	}
+	if p.Scale <= 0 {
+		p.Scale = 1.0
+	}
+	key := p.RoomID + ":" + p.DeviceID
+	cm.placements[key] = p
+	cm.mu.Unlock()
+
+	if err := cm.db.SaveCanvasPlacement(p); err != nil {
+		log.Printf("[CanvasManager] Error saving placement for %s in room %s: %v", p.DeviceID, p.RoomID, err)
+		return err
+	}
+
+	cm.broadcastCanvasUpdate()
+	return nil
+}
+
+func (cm *CanvasManager) BatchSavePlacements(roomID string, placements []CanvasPlacement) error {
+	if roomID == "" {
+		roomID = "default"
+	}
 	cm.mu.Lock()
 	for _, p := range placements {
+		p.RoomID = roomID
 		if p.Geometry == "" {
 			p.Geometry = "strip"
 		}
 		if p.Scale <= 0 {
 			p.Scale = 1.0
 		}
-		cm.placements[p.DeviceID] = p
+		key := roomID + ":" + p.DeviceID
+		cm.placements[key] = p
 		_ = cm.db.SaveCanvasPlacement(p)
 	}
 	cm.mu.Unlock()
@@ -91,8 +194,8 @@ func (cm *CanvasManager) BatchSavePlacements(placements []CanvasPlacement) error
 func (cm *CanvasManager) broadcastCanvasUpdate() {
 	if cm.hub != nil {
 		cm.hub.BroadcastJSON(map[string]interface{}{
-			"type":       "canvas_updated",
-			"placements": cm.GetPlacements(),
+			"type":  "canvas_updated",
+			"rooms": cm.GetRooms(),
 		})
 	}
 }

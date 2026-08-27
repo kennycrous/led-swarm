@@ -134,6 +134,10 @@ func (a *App) CaptureScene(name string, icon string) (*Scene, error) {
 	return a.groupMgr.CaptureScene(name, icon)
 }
 
+func (a *App) CaptureScopedScene(name string, icon string, scopeType string, targetID string) (*Scene, error) {
+	return a.groupMgr.CaptureScopedScene(name, icon, scopeType, targetID)
+}
+
 func (a *App) ApplyScene(id string) error {
 	return a.groupMgr.ApplyScene(id)
 }
@@ -172,14 +176,26 @@ func (a *App) DeleteDashboardPanel(id string) error {
 	return a.dashboardMgr.DeletePanel(id)
 }
 
-func (a *App) GetCanvasPlacements() ([]CanvasPlacement, error) {
-	return a.canvasMgr.GetPlacements(), nil
+func (a *App) GetCanvasRooms() ([]CanvasRoom, error) {
+	return a.canvasMgr.GetRooms(), nil
+}
+
+func (a *App) CreateCanvasRoom(title string, description string, width int, height int, deviceIDs []string) (CanvasRoom, error) {
+	return a.canvasMgr.CreateRoom(title, description, width, height, deviceIDs)
+}
+
+func (a *App) DeleteCanvasRoom(id string) error {
+	return a.canvasMgr.DeleteRoom(id)
+}
+
+func (a *App) GetCanvasPlacements(roomID string) ([]CanvasPlacement, error) {
+	return a.canvasMgr.GetPlacementsForRoom(roomID), nil
 }
 
 func (a *App) SaveCanvasPlacement(placement CanvasPlacement) error {
 	return a.canvasMgr.SavePlacement(placement)
 }
 
-func (a *App) BatchSaveCanvasPlacements(placements []CanvasPlacement) error {
-	return a.canvasMgr.BatchSavePlacements(placements)
+func (a *App) BatchSaveCanvasPlacements(roomID string, placements []CanvasPlacement) error {
+	return a.canvasMgr.BatchSavePlacements(roomID, placements)
 }

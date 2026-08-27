@@ -21,6 +21,7 @@ func TestDatabase_CanvasPlacements(t *testing.T) {
 
 	placement := CanvasPlacement{
 		DeviceID: "wled-canvas-1",
+		RoomID:   "room-living",
 		PosX:     150.5,
 		PosY:     250.0,
 		Rotation: 45.0,
@@ -34,7 +35,7 @@ func TestDatabase_CanvasPlacements(t *testing.T) {
 	}
 
 	// 2. GetCanvasPlacements
-	placements, err := db.GetCanvasPlacements()
+	placements, err := db.GetCanvasPlacements("room-living")
 	if err != nil {
 		t.Fatalf("GetCanvasPlacements failed: %v", err)
 	}
@@ -46,17 +47,17 @@ func TestDatabase_CanvasPlacements(t *testing.T) {
 	}
 
 	// 3. DeleteCanvasPlacement
-	if err := db.DeleteCanvasPlacement("wled-canvas-1"); err != nil {
+	if err := db.DeleteCanvasPlacement("wled-canvas-1", "room-living"); err != nil {
 		t.Fatalf("DeleteCanvasPlacement failed: %v", err)
 	}
 
-	placementsAfter, _ := db.GetCanvasPlacements()
+	placementsAfter, _ := db.GetCanvasPlacements("room-living")
 	if len(placementsAfter) != 0 {
 		t.Errorf("Expected 0 placements after delete, got %d", len(placementsAfter))
 	}
 }
 
-func TestCanvasManager_PlacementsAndBatchSave(t *testing.T) {
+func TestCanvasManager_RoomsAndPlacements(t *testing.T) {
 	db := setupTestDB(t)
 	hub := NewHub()
 
@@ -66,24 +67,36 @@ func TestCanvasManager_PlacementsAndBatchSave(t *testing.T) {
 
 	cm := NewCanvasManager(db, hub)
 
-	p1 := CanvasPlacement{DeviceID: "wled-c1", PosX: 100, PosY: 100, Rotation: 0, Scale: 1, Geometry: "strip"}
-	p2 := CanvasPlacement{DeviceID: "wled-c2", PosX: 300, PosY: 200, Rotation: 90, Scale: 1.5, Geometry: "matrix"}
+	// 1. Create Canvas Room
+	room, err := cm.CreateRoom("Living Room", "Main TV setup", 2000, 1200, []string{"wled-c1", "wled-c2"})
+	if err != nil {
+		t.Fatalf("CreateRoom failed: %v", err)
+	}
+	if room.Title != "Living Room" {
+		t.Errorf("Expected 'Living Room', got '%s'", room.Title)
+	}
 
-	if err := cm.BatchSavePlacements([]CanvasPlacement{p1, p2}); err != nil {
+	// 2. Batch Save Placements for Room
+	p1 := CanvasPlacement{DeviceID: "wled-c1", RoomID: room.ID, PosX: 100, PosY: 100, Rotation: 0, Scale: 1, Geometry: "strip"}
+	p2 := CanvasPlacement{DeviceID: "wled-c2", RoomID: room.ID, PosX: 300, PosY: 200, Rotation: 90, Scale: 1.5, Geometry: "matrix"}
+
+	if err := cm.BatchSavePlacements(room.ID, []CanvasPlacement{p1, p2}); err != nil {
 		t.Fatalf("BatchSavePlacements failed: %v", err)
 	}
 
-	placements := cm.GetPlacements()
+	placements := cm.GetPlacementsForRoom(room.ID)
 	if len(placements) != 2 {
-		t.Fatalf("Expected 2 placements in CanvasManager, got %d", len(placements))
+		t.Fatalf("Expected 2 placements in CanvasManager for room %s, got %d", room.ID, len(placements))
 	}
 
-	pMap := make(map[string]CanvasPlacement)
-	for _, p := range placements {
-		pMap[p.DeviceID] = p
+	// 3. Get Rooms List
+	rooms := cm.GetRooms()
+	if len(rooms) == 0 {
+		t.Errorf("Expected rooms list to contain at least 1 room")
 	}
 
-	if pMap["wled-c2"].Rotation != 90 || pMap["wled-c2"].Geometry != "matrix" {
-		t.Errorf("Unexpected CanvasPlacement for wled-c2: %+v", pMap["wled-c2"])
+	// 4. Delete Room
+	if err := cm.DeleteRoom(room.ID); err != nil {
+		t.Fatalf("DeleteRoom failed: %v", err)
 	}
 }

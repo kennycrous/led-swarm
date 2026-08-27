@@ -5,9 +5,14 @@
   let {
     devices = [],
     placements = [],
+    rooms = [{ id: 'default', title: 'Main Room Canvas', width: 2000, height: 1200 }],
+    currentRoomId = 'default',
     onSavePlacements = () => {},
     onUpdatePlacement = () => {},
-    onTriggerSweep = () => {}
+    onTriggerSweep = () => {},
+    onSelectRoom = () => {},
+    onCreateRoom = () => {},
+    onDeleteRoom = () => {}
   } = $props();
 
   let selectedDeviceId = $state(null);
@@ -16,8 +21,17 @@
   let snapToGrid = $state(true);
   let sweepActive = $state(false);
   let sweepTime = $state(0);
+  let isAddRoomOpen = $state(false);
+  let newRoomTitle = $state('');
 
   let animationFrameId = null;
+
+  function handleCreateRoom() {
+    if (!newRoomTitle.trim()) return;
+    onCreateRoom(newRoomTitle.trim());
+    newRoomTitle = '';
+    isAddRoomOpen = false;
+  }
 
   // Transient slider angle preview map (degrees readout while dragging)
   let sliderPreviewAngle = $state({});
@@ -214,6 +228,27 @@
 
     <!-- Controls Toolbar -->
     <div class="flex flex-wrap items-center gap-3">
+      <!-- Multi-Room Selector Dropdown -->
+      <div class="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-2 py-1">
+        <select
+          value={currentRoomId}
+          onchange={(e) => onSelectRoom(e.target.value)}
+          class="bg-transparent font-mono text-xs text-cyan-300 outline-none cursor-pointer"
+        >
+          {#each rooms as room (room.id)}
+            <option value={room.id} class="bg-slate-900 text-slate-100">{room.title}</option>
+          {/each}
+        </select>
+        <button
+          type="button"
+          onclick={() => (isAddRoomOpen = true)}
+          class="rounded-lg bg-cyan-500/20 px-2 py-1 text-xs font-bold text-cyan-300 hover:bg-cyan-500/30"
+          title="Add New 2D Room Canvas"
+        >
+          + Add Room
+        </button>
+      </div>
+
       <!-- Grid Snap Toggle -->
       <button
         type="button"
@@ -396,3 +431,38 @@
     {/each}
   </div>
 </div>
+
+{#if isAddRoomOpen}
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl border border-cyan-500/30 bg-slate-900/90 p-6 shadow-2xl">
+      <h3 class="text-lg font-bold text-slate-100 mb-2">Create New 2D Room Canvas</h3>
+      <p class="text-xs text-slate-400 mb-4">
+        Give your room layout canvas a title (e.g., Living Room, Office, Bedroom).
+      </p>
+
+      <input
+        type="text"
+        placeholder="Room Canvas Title..."
+        bind:value={newRoomTitle}
+        class="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-slate-100 outline-none focus:border-cyan-400 mb-5"
+      />
+
+      <div class="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onclick={() => (isAddRoomOpen = false)}
+          class="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onclick={handleCreateRoom}
+          class="rounded-xl bg-cyan-500/20 border border-cyan-500/40 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/30"
+        >
+          Create Room
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
