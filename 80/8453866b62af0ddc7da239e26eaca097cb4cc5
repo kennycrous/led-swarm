@@ -1,0 +1,14 @@
+.github/workflows/ci.yml
+  h_e41d77f8309f5c 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "808453866b62af0ddc7da239e26eaca097cb4cc5",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
