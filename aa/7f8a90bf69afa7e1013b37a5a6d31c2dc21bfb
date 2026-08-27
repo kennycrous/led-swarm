@@ -1,0 +1,52 @@
+frontend/src/lib/components/SceneCard.svelte
+  h_e41d77f8309f5c 2,6-7,9-11,15,40,42-45,48-49,57-59,61-63,65,68-106,109-120
+frontend/src/lib/components/StripsManagement.svelte
+  h_e41d77f8309f5c 1-131
+backend/src/db.go
+  h_e41d77f8309f5c 11,30-47,118-135,350-460
+  h_e41d77f8309f5c 461-474
+frontend/src/lib/components/GroupCard.svelte
+  h_e41d77f8309f5c 2-3,10-11,17-19,27,52,54-55,57-61,71-72,78,84,86-88,90,92-131,136,145,168,187,189-200,202-217
+  h_e41d77f8309f5c 56
+frontend/src/App.svelte
+  h_e41d77f8309f5c 21-26,30,37,41,49-106,109-110,114-117,134-184,190-195,198-199,209,298,301-307,311-313,316-320,325,334-346,348,351-352,354,359-362,365-412,513-526,557,559-567,579-613
+  h_e41d77f8309f5c 108,113,121,133,187,189,196-197,200-202,205-206,211-212,216-217,219-220,225,227-228,232-233,235-236,241-246,248,250-254,256-257,259-265,267-269,271-272,276-277,279-280,282,284-286,289,292,294-297,299-300,315,321,324,326-331,353,355-356,363-364,418-427,429-442,444-506,508-512,527-534,536-544,546-552,556,558,568-575,617-618,621,623-628,631,635-638,641,644-647,649-698
+backend/src/device_manager.go
+  h_e41d77f8309f5c 16-23,44-47
+backend/src/server.go
+  h_e41d77f8309f5c 15-22,25,27-34,59-67,317-463
+frontend/src/lib/stores/dashboardStore.svelte.js
+  h_e41d77f8309f5c 1-212
+  h_e41d77f8309f5c 213-218
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 2-3,9-10,16-18,24,52,54-55,57-123,125-134,141,150,164,180,182-190,192-205
+  h_e41d77f8309f5c 56
+.docs/roadmap.md
+  h_e41d77f8309f5c 121,124-126,129-130,132-133,135-137
+frontend/src/lib/components/CyberSelect.svelte
+  h_e41d77f8309f5c 1-90
+backend/src/app.go
+  h_e41d77f8309f5c 11-18,21,23-29,142-171
+backend/src/dashboard_manager.go
+  h_e41d77f8309f5c 1-183
+  h_e41d77f8309f5c 184-206
+backend/src/main.go
+  h_e41d77f8309f5c 40-42,55,61
+frontend/src/lib/components/CaptureSceneModal.svelte
+  h_e41d77f8309f5c 2,7,15,17-19,22,24-25,33-34,36-41,53,55,66,76,82,93-94,96
+frontend/src/lib/components/CreateGroupModal.svelte
+  h_e41d77f8309f5c 2,8,23,25-27,36-37,39-44,56,58,68,70,80,88-95,99-101,104,115-116,118
+frontend/src/lib/stores/deviceStore.svelte.js
+  h_e41d77f8309f5c 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "aa7f8a90bf69afa7e1013b37a5a6d31c2dc21bfb",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
