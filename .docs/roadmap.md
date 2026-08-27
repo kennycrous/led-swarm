@@ -32,35 +32,41 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 004: Customizable Dashboard & Device Visibility Management                 |
+|  Slice 004 [COMPLETED]: Customizable Dashboard & Device Visibility Management     |
 |  - Pin / unpin individual strips, groups, or scene presets to dashboard           |
 |  - Settings -> Strips & Devices Management view showing all network strips        |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 005: 2D Visual Layout Canvas Editor                                        |
+|  Slice 005 [COMPLETED]: Automated Testing, Linting & Code Quality Suite           |
+|  - Go & Vitest test suites, mock WLED server harness, GitHub Actions CI           |
++-----------------------------------------------------------------------------------+
+                                         │
+                                         ▼
++-----------------------------------------------------------------------------------+
+|  Slice 006 [COMPLETED]: Multi-Room 2D Layout Canvas Editor & Scoped Scenes        |
 |  - Interactive 2D drag-and-drop physical strip room map                           |
-|  - Live pixel mirroring preview & spatial sweep animations                        |
+|  - Multi-room canvas presets, dashboard room cards, scoped scene snapshots        |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 006: High-FPS DDP / UDP Pixel Streamer                                     |
-|  - 60 FPS DDP (UDP 4048) pixel buffer generator                                   |
-|  - Go procedural matrix animations (rainbow wave, digital rain, pulse)            |
+|  Slice 007 [COMPLETED]: Card-Integrated High-FPS DDP Pixel Streamer & 2D Spatial  |
+|  - 60 FPS DDP (UDP 4048) target-keyed streamer (Device, Group, 2D Room Cards)     |
+|  - 2D spatial coordinate generators (radial ripple, directional room sweep)       |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 007: Sound Sync & Audio Reactivity Engine                                  |
+|  Slice 008: Sound Sync & Audio Reactivity Engine                                  |
 |  - Audio input FFT frequency binning (Bass, Mid, Treble)                          |
 |  - Audio energy mapping to LED spatial pulses & live spectrum UI                  |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 008: Desktop Integration, Settings & Production Release                    |
+|  Slice 009: Desktop Integration, Settings & Production Release                    |
 |  - System tray icon & minimize-to-tray in Wails                                   |
 |  - Manual IP subnet scanner & GitHub Actions ghcr.io Docker workflow              |
 +-----------------------------------------------------------------------------------+
@@ -156,35 +162,37 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟡 Slice 006: Multi-Room 2D Layout Canvas Editor & Scoped Scenes
+### 🟢 Slice 006 [COMPLETED]: Multi-Room 2D Layout Canvas Editor & Scoped Scenes
 - **Objective**: Create an interactive 2D visual workspace where users drag and position WLED light strips according to physical room layouts, pin 2D Room Canvases to the Dashboard, and capture room-scoped scenes that don't override untargeted rooms.
 - **Backend Deliverables**:
   - [x] Database table `canvas_placements` (pos_x, pos_y, rotation, scale, geometry) & `CanvasManager` WebSocket engine.
-  - [ ] Database table `canvas_rooms` (`id`, `title`, `width`, `height`) for multi-room canvas preset management.
-  - [ ] Scoped Scenes schema (`scope_type`: 'global' | 'room' | 'group', `target_id`): Captures & restores state ONLY for assigned strips.
-  - [ ] Dashboard item support for `'room'` item type (`/api/v1/dashboard/pin`).
+  - [x] Database table `canvas_rooms` (`id`, `title`, `width`, `height`) for multi-room canvas preset management.
+  - [x] Scoped Scenes schema (`scope_type`: 'global' | 'room' | 'group', `target_id`): Captures & restores state ONLY for assigned strips.
+  - [x] Dashboard item support for `'room'` item type (`/api/v1/dashboard/pin`).
 - **Frontend Deliverables**:
   - [x] Interactive 2D room map grid editor in Svelte 5 (`CanvasEditor.svelte`) with live pixel mirroring & spatial sweep animation.
-  - [ ] Multi-Room Canvas Selector (create, switch, rename, delete 2D Room Canvases).
-  - [ ] Pinnable 2D Room Canvas Cards on Dashboard grid displaying mini live 2D pixel preview & "Edit Layout" button.
-  - [ ] Group Creation Modal supporting Group Types (Standard Group, 2D Spatial Room, Scoped Scene).
-  - [ ] Scoped Scene capture modal allowing room-specific snapshot creation.
+  - [x] Multi-Room Canvas Selector (create, switch, rename, delete 2D Room Canvases).
+  - [x] Pinnable 2D Room Canvas Cards on Dashboard grid displaying mini live 2D pixel preview & "Edit Layout" button.
+  - [x] Group Creation Modal supporting Group Types (Standard Group, 2D Spatial Room, Scoped Scene).
+  - [x] Scoped Scene capture modal allowing room-specific snapshot creation.
 - **Acceptance Criteria**:
-  - User can create multiple 2D Room Canvases, pin a Room Canvas to the Dashboard, and open its 2D layout editor directly.
-  - Applying a Scoped Scene updates the assigned Room or Group without touching unassigned rooms.
+  - [x] User can create multiple 2D Room Canvases, pin a Room Canvas to the Dashboard, and open its 2D layout editor directly.
+  - [x] Applying a Scoped Scene updates the assigned Room or Group without touching unassigned rooms.
 
 ---
 
-### 🟠 Slice 007: High-FPS DDP / UDP Pixel Streamer
-- **Objective**: Stream high-frequency (60 FPS) raw RGB pixel buffers over DDP UDP port 4048 for custom matrix animations and swarm visuals.
+### 🟢 Slice 007 [COMPLETED]: Card-Integrated High-FPS DDP / UDP Pixel Streamer
+- **Objective**: Stream high-frequency (60 FPS) raw RGB pixel buffers over DDP UDP port 4048 for custom matrix animations and 2D room spatial visuals embedded directly into Device, Group, and 2D Room cards.
 - **Backend Deliverables**:
-  - DDP UDP packet generator emitting frame buffers on UDP port 4048.
-  - Procedural effect generator engine (matrix digital rain, rainbow wave, pulse beads, noise fire).
+  - [x] DDP UDP packet streamer engine (`backend/src/ddp_streamer.go`) emitting frame buffers on UDP port 4048.
+  - [x] Multi-target streaming manager (`"device:<id>"`, `"group:<id>"`, `"room:<id>"`).
+  - [x] Procedural generator engine (rainbow wave, digital rain, pulse beads, cyber fire, 2D radial ripple, 2D directional sweep).
 - **Frontend Deliverables**:
-  - DDP Streaming control panel with effect dropdown, speed slider, and stream start/stop switch.
-  - Status bar metrics: Real-time DDP frame rate (FPS) counter and UDP network latency graph.
+  - [x] DDP 60 mode toggle button and live 60.0 FPS badge embedded in `DeviceCard.svelte`, `GroupCard.svelte`, and `RoomCard.svelte`.
+  - [x] Dynamic CyberSelect dropdown swap to DDP procedural presets when DDP 60 mode is active.
+  - [x] Reactive target-keyed `ddpStore.svelte.js` tracking active DDP streams over WebSockets.
 - **Acceptance Criteria**:
-  - Activating DDP stream sends smooth 60 FPS pixel animations across multiple WLED strips without EEPROM wear.
+  - [x] Activating DDP stream sends smooth 60 FPS pixel animations across single strips, virtual groups, and 2D room spatial maps without EEPROM wear.
 
 ---
 
