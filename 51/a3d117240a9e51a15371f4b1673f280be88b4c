@@ -1,0 +1,38 @@
+.plans/007-ddp-pixel-streamer.md
+  h_e41d77f8309f5c 1-77
+backend/src/app.go
+  h_e41d77f8309f5c 18,23,31,217-241
+backend/src/app_test.go
+  h_e41d77f8309f5c 19,22
+backend/src/ddp_streamer.go
+  h_e41d77f8309f5c 1-303
+backend/src/ddp_streamer_test.go
+  h_e41d77f8309f5c 1-107
+backend/src/main.go
+  h_e41d77f8309f5c 42-43,58,64
+backend/src/server.go
+  h_e41d77f8309f5c 21,27,35,82-86,659-712
+backend/src/server_test.go
+  h_e41d77f8309f5c 22-23,34
+frontend/src/App.svelte
+  h_e41d77f8309f5c 43-44,50,58,279-289,684-691
+frontend/src/lib/components/DdpStudio.svelte
+  h_e41d77f8309f5c 1-335
+frontend/src/lib/stores/ddpStore.svelte.js
+  h_e41d77f8309f5c 1-93
+frontend/tests/components/DdpStudio.test.js
+  h_e41d77f8309f5c 1-25
+frontend/tests/stores/ddpStore.test.js
+  h_e41d77f8309f5c 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "51a3d117240a9e51a15371f4b1673f280be88b4c",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
