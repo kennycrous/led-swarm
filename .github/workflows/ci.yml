@@ -30,11 +30,14 @@ jobs:
           cd frontend
           npm install
 
+      - name: Build Embedded Web Assets
+        run: make build-frontend
+
       - name: Run Static Analysis & Linters (go vet, ESLint, svelte-check)
         run: make lint
 
       - name: Run Unit & Integration Tests (go test, Vitest)
         run: make test
 
-      - name: Validate Production Build
-        run: make build
+      - name: Validate Production Server Binary Build
+        run: make build-backend

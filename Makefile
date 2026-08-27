@@ -48,8 +48,8 @@ fmt:
 	@echo "==> Formatting Svelte and JS frontend code (Prettier)..."
 	cd frontend && npm run format
 
-## test-backend: Run backend Go unit tests
-test-backend:
+## test-backend: Run backend Go unit tests (ensures frontend assets built first)
+test-backend: build-frontend
 	@echo "==> Running Go backend unit tests..."
 	cd backend && go test -v ./src/...
 
@@ -61,8 +61,8 @@ test-frontend:
 ## test: Run all backend and frontend unit tests
 test: test-backend test-frontend
 
-## lint-backend: Run Go static code analysis (go vet)
-lint-backend:
+## lint-backend: Run Go static code analysis (go vet, ensures frontend assets built first)
+lint-backend: build-frontend
 	@echo "==> Running Go static analysis (go vet)..."
 	cd backend && go vet ./src/...
 
@@ -78,8 +78,6 @@ lint: lint-backend lint-frontend
 clean:
 	@echo "==> Cleaning build artifacts..."
 	rm -rf backend/led-swarm-server backend/led-swarm.exe backend/src/dist/assets backend/*.db *.db bin/ build/ frontend/dist
-	@mkdir -p backend/src/dist
-	@echo '<!DOCTYPE html><html><head><title>LED Swarm</title></head><body><h1>LED Swarm Backend Server</h1></body></html>' > backend/src/dist/index.html
 
 ## help: Display available targets
 help:
