@@ -59,9 +59,9 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 008: Sound Sync & Audio Reactivity Engine                                  |
+|  Slice 008: Card-Integrated Sound Sync & Audio Reactivity Engine                  |
 |  - Audio input FFT frequency binning (Bass, Mid, Treble)                          |
-|  - Audio energy mapping to LED spatial pulses & live spectrum UI                  |
+|  - Target-keyed sound reactivity toggles per Device, Group & 2D Room Canvas Card   |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
@@ -196,26 +196,29 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🔴 Slice 008: Sound Sync & Audio Reactivity Engine
-- **Objective**: Capture live audio input and map frequency spectrum energy to WLED spatial animations.
-- **Backend / Frontend Deliverables**:
-  - Audio capture integration (native audio input or WebAudio FFT bridge).
-  - FFT frequency analyzer binning audio into Bass, Mid, and Treble energy channels.
-  - Audio Reactivity Studio tab in UI: Live FFT visualizer graph, gain sensitivity slider, and beat pulse mapping controls.
-  - Audio-driven spatial pulse animations across the 2D visual layout canvas.
+### 🔴 Slice 008: Card-Integrated Sound Sync & Audio Reactivity Engine
+- **Objective**: Capture real-time system audio input and map frequency spectrum energy (Bass, Mid, Treble) to per-card LED spatial animations directly on Device Cards, Group Cards, and 2D Room Canvas Cards (not application-wide global overrides).
+- **Backend Deliverables**:
+  - Native audio capture / WebAudio API bridge with FFT frequency analyzer binning audio into Bass, Mid, and Treble energy channels.
+  - Target-keyed audio energy dispatcher mapping FFT reactivity to specific targets (`"device:<id>"`, `"group:<id>"`, `"room:<id>"`).
+  - Procedural sound-reactive 1D & 2D spatial generators (*Bass Pulse*, *Spectrum Waterfall*, *Beat Ripple*, *VU Meter*, *Treble Sparkle*).
+- **Frontend Deliverables**:
+  - Embedded `Sound Sync` mode toggle button on `DeviceCard.svelte`, `GroupCard.svelte`, and `RoomCard.svelte`.
+  - Per-card audio sensitivity gain slider, frequency band selector (Bass / Mid / Treble / Full Spectrum), and sound-reactive preset dropdown.
+  - Mini FFT spectrum visualizer indicator bar directly on card headers when Sound Sync is active for that specific room or group.
 - **Acceptance Criteria**:
-  - Playing music triggers real-time LED pulses and color shifts matching beat energy.
+  - Enabling Sound Sync on a specific Room or Group card drives real-time audio reactivity for that card's assigned strips while other unselected rooms/groups continue running their independent effects or DDP streams.
 
 ---
 
 ### ⚪ Slice 009: Desktop Integration, Settings & Production Release
-- **Objective**: Add desktop OS integration features and automated production deployment workflows.
+- **Objective**: Implement native OS system desktop features, manual subnet network scanning, and automated production deployment workflows.
 - **Backend / Frontend Deliverables**:
   - System tray icon & minimize-to-tray behavior in Wails desktop app.
-  - Network subnet scanner for manual IP range searching.
-  - GitHub Actions CI/CD release workflow compiling cross-platform binaries and pushing Docker images to `ghcr.io`.
+  - Network Settings: Manual IP range subnet scanner for bulk discovering WLED strips on custom subnets.
+  - GitHub Actions CI/CD release workflow compiling cross-platform standalone executables (Windows, macOS, Linux) and publishing Docker container images to `ghcr.io`.
 - **Acceptance Criteria**:
-  - Closing Wails desktop app minimizes to system tray; docker container builds automatically on GitHub tags.
+  - Closing Wails desktop app minimizes to system tray; docker container builds automatically on GitHub release tags.
 
 ---
 
