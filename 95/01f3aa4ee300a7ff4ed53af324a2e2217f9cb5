@@ -1,0 +1,26 @@
+frontend/src/App.svelte
+  h_e41d77f8309f5c 78-90,416,434,454,465-466,469,474-476,579-593,622,695-696,703-705
+frontend/src/lib/components/CanvasEditor.svelte
+  h_e41d77f8309f5c 3-15,27-28,39-66,254,257,272,283,296,299-300,303,316,320
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 11,131-142
+frontend/src/lib/components/GroupCard.svelte
+  h_e41d77f8309f5c 12,100-111
+frontend/src/lib/components/RoomCard.svelte
+  h_e41d77f8309f5c 2-3,9-10,13,15-17,20-35,43,49,66,80-128,132-134,136-143,146-149,153-226,228,232,262-286,291-320,324-335
+frontend/src/lib/components/SceneCard.svelte
+  h_e41d77f8309f5c 8,75-86
+frontend/tests/components/CanvasEditor.test.js
+  h_e41d77f8309f5c 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9501f3aa4ee300a7ff4ed53af324a2e2217f9cb5",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
