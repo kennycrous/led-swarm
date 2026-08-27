@@ -1,0 +1,42 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 159,162-163,165-168,170-171
+.plans/006-2d-canvas-layout-editor.md
+  h_e41d77f8309f5c 1-81
+backend/src/app.go
+  h_e41d77f8309f5c 17,22,29,174-185
+backend/src/app_test.go
+  h_e41d77f8309f5c 18,21
+backend/src/canvas_manager.go
+  h_e41d77f8309f5c 1-98
+backend/src/canvas_manager_test.go
+  h_e41d77f8309f5c 1-89
+backend/src/db.go
+  h_e41d77f8309f5c 48-56,111-112,114-115,484-544
+backend/src/main.go
+  h_e41d77f8309f5c 41,56,62
+backend/src/server.go
+  h_e41d77f8309f5c 20,26,33,70-74,471-515
+backend/src/server_test.go
+  h_e41d77f8309f5c 21,31
+frontend/src/App.svelte
+  h_e41d77f8309f5c 38-39,44,572-596
+frontend/src/lib/components/CanvasEditor.svelte
+  h_e41d77f8309f5c 1-398
+frontend/src/lib/stores/canvasStore.svelte.js
+  h_e41d77f8309f5c 1-96
+frontend/tests/components/CanvasEditor.test.js
+  h_e41d77f8309f5c 1-20
+frontend/tests/stores/canvasStore.test.js
+  h_e41d77f8309f5c 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "420b06643db60d1ce5fd757d2118ba32fb7bed88",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
