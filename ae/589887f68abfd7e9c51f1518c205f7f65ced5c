@@ -1,0 +1,40 @@
+backend/src/app.go
+  h_e41d77f8309f5c 13,18,22,37,58-100
+backend/src/main.go
+  h_e41d77f8309f5c 38-39,51,57
+backend/src/mdns.go
+  h_e41d77f8309f5c 16,21,25,98,100-101
+frontend/src/lib/components/ManualIpModal.svelte
+  h_e41d77f8309f5c 1-82
+backend/src/server.go
+  h_e41d77f8309f5c 16,22,26,38-42,63-118,120-122,124,126-153
+  h_e41d77f8309f5c 154-155
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 1-163
+  h_e41d77f8309f5c 164-176
+backend/src/device_manager.go
+  h_e41d77f8309f5c 1-263
+  h_e41d77f8309f5c 264-270
+backend/src/db.go
+  h_e41d77f8309f5c 102,114-129
+frontend/src/App.svelte
+  h_e41d77f8309f5c 13-14,16-20,24-25,27-29,31-33,36-38,105,109-110,118-120,125-133,136-137,140-141,146,165,174,182-185,192-195,203-207,209-232,257-262
+frontend/src/lib/stores/deviceStore.svelte.js
+  h_e41d77f8309f5c 1-265
+  h_e41d77f8309f5c 266-297
+backend/src/wled.go
+  h_e41d77f8309f5c 67-69,99-100,102-103,105-125,128
+frontend/vite.config.js
+  h_e41d77f8309f5c 12-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ae589887f68abfd7e9c51f1518c205f7f65ced5c",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
