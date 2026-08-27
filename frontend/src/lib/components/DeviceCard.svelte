@@ -1,5 +1,5 @@
 <script>
-  import { Power, Edit2, Check, Palette, Sparkles, Sliders } from 'lucide-svelte';
+  import { Power, Edit2, Check, Palette, Sparkles, Sun } from 'lucide-svelte';
 
   let { 
     device, 
@@ -114,7 +114,7 @@
 
     <!-- Brightness Slider -->
     <div class="flex items-center gap-3 bg-slate-900/40 px-3 py-1.5 rounded-xl border border-slate-800/80">
-      <Sliders class="w-3.5 h-3.5 text-slate-400" />
+      <Sun class="w-4 h-4 text-purple-400" />
       <input 
         type="range" 
         min="0" 

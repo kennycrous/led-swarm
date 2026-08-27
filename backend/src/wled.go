@@ -91,6 +91,25 @@ func (c *WLEDClient) FetchDeviceInfo(ip string) (*WLEDInfo, error) {
 	return &info, nil
 }
 
+func (c *WLEDClient) FetchLiveState(ip string) (json.RawMessage, error) {
+	url := fmt.Sprintf("http://%s/json/state", ip)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("wled status: %d", resp.StatusCode)
+	}
+
+	var stateRaw json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&stateRaw); err != nil {
+		return nil, err
+	}
+	return stateRaw, nil
+}
+
 func (c *WLEDClient) SetState(ip string, state WLEDState) error {
 	body, err := json.Marshal(state)
 	if err != nil {
