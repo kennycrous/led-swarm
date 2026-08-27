@@ -135,3 +135,33 @@ func TestCanvasManager_PersistenceAcrossRestart(t *testing.T) {
 		t.Errorf("Unexpected placement data after restart: %+v", placements[0])
 	}
 }
+
+func TestCanvasManager_UpdateRoomTitle(t *testing.T) {
+	db := setupTestDB(t)
+	hub := NewHub()
+	cm := NewCanvasManager(db, hub)
+
+	room, err := cm.CreateRoom("Initial Name", "Description", 2000, 1200, nil)
+	if err != nil {
+		t.Fatalf("CreateRoom failed: %v", err)
+	}
+
+	updated, err := cm.UpdateRoomTitle(room.ID, "Renamed Room")
+	if err != nil {
+		t.Fatalf("UpdateRoomTitle failed: %v", err)
+	}
+
+	if updated.Title != "Renamed Room" {
+		t.Errorf("Expected title 'Renamed Room', got '%s'", updated.Title)
+	}
+
+	// Verify persistence in DB after manager re-initialization
+	cmRestarted := NewCanvasManager(db, hub)
+	rooms := cmRestarted.GetRooms()
+	if len(rooms) != 1 {
+		t.Fatalf("Expected 1 room after restart, got %d", len(rooms))
+	}
+	if rooms[0].Title != "Renamed Room" {
+		t.Errorf("Expected persisted title 'Renamed Room', got '%s'", rooms[0].Title)
+	}
+}

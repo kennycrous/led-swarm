@@ -127,18 +127,19 @@ class CanvasStore {
   }
 
   async renameRoom(roomId, newTitle) {
+    if (!newTitle || !newTitle.trim()) return;
     try {
-      const found = this.rooms.find((r) => r.id === roomId);
-      if (found) found.title = newTitle;
+      const cleanTitle = newTitle.trim();
+      this.rooms = this.rooms.map((r) => (r.id === roomId ? { ...r, title: cleanTitle } : r));
 
       const wailsApp = getWailsApp();
       if (wailsApp && typeof wailsApp.UpdateRoomTitle === 'function') {
-        await wailsApp.UpdateRoomTitle(roomId, newTitle);
+        await wailsApp.UpdateRoomTitle(roomId, cleanTitle);
       } else {
         await fetch('/api/v1/canvas/rooms/rename', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: roomId, title: newTitle })
+          body: JSON.stringify({ id: roomId, title: cleanTitle })
         });
       }
     } catch (err) {

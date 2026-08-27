@@ -198,6 +198,10 @@ func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleGroups(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	if strings.HasSuffix(r.URL.Path, "/name") {
+		s.handleRenameGroup(w, r)
+		return
+	}
 	switch r.Method {
 	case http.MethodGet:
 		groups := s.groupMgr.GetGroups()
@@ -430,6 +434,10 @@ func (s *Server) handleReorderDashboardItems(w http.ResponseWriter, r *http.Requ
 
 func (s *Server) handleDashboardPanels(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	if strings.HasSuffix(r.URL.Path, "/rename") {
+		s.handleRenamePanel(w, r)
+		return
+	}
 	switch r.Method {
 	case http.MethodGet:
 		panels, err := s.dashboardMgr.GetPanels()
@@ -529,6 +537,10 @@ func (s *Server) handleBatchSaveCanvasPlacements(w http.ResponseWriter, r *http.
 
 func (s *Server) handleCanvasRooms(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	if strings.HasSuffix(r.URL.Path, "/rename") {
+		s.handleRenameRoom(w, r)
+		return
+	}
 	switch r.Method {
 	case http.MethodGet:
 		json.NewEncoder(w).Encode(s.canvasMgr.GetRooms())

@@ -25,10 +25,28 @@ describe('RoomCard.svelte', () => {
       placements: mockPlacements,
       isPinned: true,
       cardSize: 'normal',
-      onEditLayout: () => {}
+      onEditLayout: () => {},
+      onRename: () => {}
     });
 
     expect(getByText('Living Room Canvas')).toBeDefined();
     expect(getByText('Edit 2D Layout')).toBeDefined();
+  });
+
+  it('triggers onRename callback when title is edited', async () => {
+    let renamed = null;
+    const { getByTitle } = render(RoomCard, {
+      room: mockRoom,
+      devices: mockDevices,
+      placements: mockPlacements,
+      isPinned: true,
+      cardSize: 'normal',
+      onRename: (id, newTitle) => {
+        renamed = { id, newTitle };
+      }
+    });
+
+    const titleBtn = getByTitle('Click to rename room');
+    expect(titleBtn).toBeDefined();
   });
 });

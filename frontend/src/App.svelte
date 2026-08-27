@@ -456,6 +456,7 @@
                           groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
                         onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
                         onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                        onRename={(id, name) => groupStore.renameGroup(id, name)}
                         onDelete={(id) => groupStore.deleteGroup(id)}
                         onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                         onToggleSize={(id) => cycleCardSize(id, item.size)}
@@ -485,6 +486,7 @@
                           canvasStore.selectRoom(item.data.id);
                           activeTab = 'canvas';
                         }}
+                        onRename={(id, title) => canvasStore.renameRoom(id, title)}
                         onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                         onToggleSize={(id) => cycleCardSize(id, item.size)}
                         onDelete={(id) => canvasStore.deleteRoom(id)}
@@ -673,6 +675,7 @@
           currentRoomId={canvasStore.currentRoomId}
           onSelectRoom={(id) => canvasStore.selectRoom(id)}
           onCreateRoom={(title) => canvasStore.createRoom(title)}
+          onRenameRoom={(id, title) => canvasStore.renameRoom(id, title)}
           onDeleteRoom={(id) => canvasStore.deleteRoom(id)}
           onBackToGroups={() => (activeTab = 'groups')}
           onSavePlacements={() => canvasStore.savePlacements()}

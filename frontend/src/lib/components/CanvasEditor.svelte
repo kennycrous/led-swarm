@@ -11,7 +11,8 @@
     ZoomOut,
     Maximize2,
     Cpu,
-    ArrowLeft
+    ArrowLeft,
+    Edit3
   } from 'lucide-svelte';
 
   let {
@@ -24,6 +25,7 @@
     onTriggerSweep = () => {},
     onSelectRoom = () => {},
     onCreateRoom = () => {},
+    onRenameRoom = () => {},
     onDeleteRoom = () => {},
     onBackToGroups = () => {}
   } = $props();
@@ -35,6 +37,8 @@
   let sweepActive = $state(false);
   let sweepTime = $state(0);
   let animationFrameId = null;
+  let isEditingTitle = $state(false);
+  let editedTitle = $state('');
 
   let currentRoom = $derived(
     rooms.find((r) => r.id === currentRoomId) || { title: '2D Room Layout', width: 2000, height: 1200 }
@@ -250,10 +254,45 @@
     class="glass-panel rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-cyan-500/20 shadow-2xl"
   >
     <div>
-      <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
-        <Grid class="w-6 h-6 text-cyan-400" />
-        {currentRoom.title} 2D Layout Canvas
-      </h2>
+      {#if isEditingTitle}
+        <form
+          onsubmit={(e) => {
+            e.preventDefault();
+            if (editedTitle.trim() && editedTitle.trim() !== currentRoom.title) {
+              onRenameRoom(currentRoom.id, editedTitle.trim());
+            }
+            isEditingTitle = false;
+          }}
+          class="flex items-center gap-2"
+        >
+          <Grid class="w-6 h-6 text-cyan-400" />
+          <input
+            type="text"
+            bind:value={editedTitle}
+            onblur={() => {
+              if (editedTitle.trim() && editedTitle.trim() !== currentRoom.title) {
+                onRenameRoom(currentRoom.id, editedTitle.trim());
+              }
+              isEditingTitle = false;
+            }}
+            class="bg-[#06090e] border border-cyan-500/50 rounded-lg px-2.5 py-0.5 text-lg font-bold text-slate-100 focus:outline-none focus:border-cyan-400 w-64"
+          />
+        </form>
+      {:else}
+        <button
+          type="button"
+          onclick={() => {
+            isEditingTitle = true;
+            editedTitle = currentRoom.title;
+          }}
+          class="group/roomTitle flex items-center gap-2 text-xl font-bold text-slate-100 hover:text-cyan-300 transition-colors cursor-pointer text-left border-0 bg-transparent p-0"
+          title="Click to rename room"
+        >
+          <Grid class="w-6 h-6 text-cyan-400" />
+          <span>{currentRoom.title} 2D Layout Canvas</span>
+          <Edit3 class="w-4 h-4 text-slate-500 opacity-0 group-hover/roomTitle:opacity-100 transition-opacity" />
+        </button>
+      {/if}
       <p class="text-xs font-mono text-slate-400 mt-1">
         Interactive 2D room map for dragging, rotating, and positioning WLED light strips with live pixel mirroring.
       </p>

@@ -158,18 +158,18 @@ export function getDashboardStore() {
     },
 
     async renamePanel(panelId, newTitle) {
-      if (!newTitle.trim()) return;
+      if (!newTitle || !newTitle.trim()) return;
       try {
-        const found = panels.find((p) => p.id === panelId);
-        if (found) found.title = newTitle.trim();
+        const cleanTitle = newTitle.trim();
+        panels = panels.map((p) => (p.id === panelId ? { ...p, title: cleanTitle } : p));
 
         if (isWails && window.go?.main?.App?.RenameDashboardPanel) {
-          await window.go.main.App.RenameDashboardPanel(panelId, newTitle.trim());
+          await window.go.main.App.RenameDashboardPanel(panelId, cleanTitle);
         } else {
           await fetch('/api/v1/dashboard/panels/rename', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: panelId, title: newTitle.trim() })
+            body: JSON.stringify({ id: panelId, title: cleanTitle })
           });
         }
       } catch (e) {

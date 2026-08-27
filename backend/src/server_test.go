@@ -39,6 +39,7 @@ func createTestServer(t *testing.T) (*Server, *httptest.Server) {
 	mux.HandleFunc("/api/v1/palettes", srv.handlePalettes)
 
 	mux.HandleFunc("/api/v1/groups", srv.handleGroups)
+	mux.HandleFunc("/api/v1/groups/", srv.handleGroups)
 	mux.HandleFunc("/api/v1/scenes", srv.handleScenes)
 
 	mux.HandleFunc("/api/v1/dashboard/items", srv.handleDashboardItems)
@@ -46,6 +47,9 @@ func createTestServer(t *testing.T) (*Server, *httptest.Server) {
 	mux.HandleFunc("/api/v1/dashboard/panel", srv.handleSetDashboardItemPanel)
 	mux.HandleFunc("/api/v1/dashboard/panels", srv.handleDashboardPanels)
 	mux.HandleFunc("/api/v1/dashboard/panels/", srv.handleDashboardPanels)
+
+	mux.HandleFunc("/api/v1/canvas/rooms", srv.handleCanvasRooms)
+	mux.HandleFunc("/api/v1/canvas/rooms/", srv.handleCanvasRooms)
 
 	ts := httptest.NewServer(mux)
 	t.Cleanup(func() {
@@ -133,6 +137,35 @@ func TestServer_RESTEndpoints(t *testing.T) {
 	res.Body.Close()
 	if item.PanelID != createdPanel.ID {
 		t.Errorf("Expected PanelID '%s', got '%s'", createdPanel.ID, item.PanelID)
+	}
+
+	// 6. Test Canvas Room Creation & Renaming REST endpoints
+	roomReq := map[string]interface{}{"title": "Living Room", "width": 2000, "height": 1200}
+	body, _ = json.Marshal(roomReq)
+	res, err = http.Post(ts.URL+"/api/v1/canvas/rooms", "application/json", bytes.NewBuffer(body))
+	if err != nil || res.StatusCode != http.StatusOK {
+		t.Fatalf("POST /api/v1/canvas/rooms failed: %v, status: %d", err, res.StatusCode)
+	}
+	var createdRoom CanvasRoom
+	json.NewDecoder(res.Body).Decode(&createdRoom)
+	res.Body.Close()
+
+	// Now rename the room via POST /api/v1/canvas/rooms/rename
+	renameReq := map[string]string{"id": createdRoom.ID, "title": "Main Living Area"}
+	body, _ = json.Marshal(renameReq)
+	res, err = http.Post(ts.URL+"/api/v1/canvas/rooms/rename", "application/json", bytes.NewBuffer(body))
+	if err != nil || res.StatusCode != http.StatusOK {
+		t.Fatalf("POST /api/v1/canvas/rooms/rename failed: %v, status: %d", err, res.StatusCode)
+	}
+	var renamedRoom CanvasRoom
+	json.NewDecoder(res.Body).Decode(&renamedRoom)
+	res.Body.Close()
+
+	if renamedRoom.ID != createdRoom.ID {
+		t.Errorf("Expected same Room ID '%s', got '%s'", createdRoom.ID, renamedRoom.ID)
+	}
+	if renamedRoom.Title != "Main Living Area" {
+		t.Errorf("Expected title 'Main Living Area', got '%s'", renamedRoom.Title)
 	}
 
 	// 6. Test Error Cases (HTTP 400 Bad Request)
