@@ -1,0 +1,24 @@
+backend/src/app.go
+  h_e41d77f8309f5c 160-171
+backend/src/dashboard_manager.go
+  h_e41d77f8309f5c 4,7,149-175
+backend/src/db.go
+  h_e41d77f8309f5c 41-47,129-135,413-460
+backend/src/server.go
+  h_e41d77f8309f5c 64-65,416-463
+frontend/src/App.svelte
+  h_e41d77f8309f5c 157-160
+frontend/src/lib/stores/dashboardStore.svelte.js
+  h_e41d77f8309f5c 4,15,67-75,126,128-153,156,158-169,189-203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "286b619f7483cc86e82d41b062f51a1247c6b6d5",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
