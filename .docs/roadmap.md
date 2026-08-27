@@ -18,7 +18,7 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 002: Live WLED Device Discovery & Real-Time Controls                      |
+|  Slice 002 [COMPLETED]: Live WLED Device Discovery & Real-Time Controls           |
 |  - Real mDNS & WLED WebSocket proxy live status updates                           |
 |  - Power, brightness, color picker, effects, SQLite device storage               |
 +-----------------------------------------------------------------------------------+
@@ -74,21 +74,23 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🔵 Slice 002: Live WLED Device Discovery & Real-Time Controls
+### 🟢 Slice 002 [COMPLETED]: Live WLED Device Discovery & Real-Time Controls
 - **Objective**: Replace frontend sample placeholder data with live, auto-discovered WLED network devices and real-time controls.
 - **Backend Deliverables**:
-  - WLED WebSocket proxy maintaining persistent connections to discovered WLED IPs.
-  - Broadcast live device state deltas to Svelte clients over `/api/v1/ws`.
-  - Save newly discovered devices and online/offline health updates into SQLite `devices` table.
-  - HTTP REST endpoints for custom device renaming and manual IP addition.
+  - [x] WLED WebSocket proxy maintaining persistent connections to discovered WLED IPs.
+  - [x] Broadcast live device state deltas to Svelte clients over `/api/v1/ws`.
+  - [x] Save newly discovered devices and online/offline health updates into SQLite `devices` table.
+  - [x] HTTP REST endpoints for custom device renaming, state updates, and manual IP addition.
+  - [x] Cache built-in WLED effects (`/api/v1/effects`) and palettes (`/api/v1/palettes`).
 - **Frontend Deliverables**:
-  - Connect Svelte UI to `/api/v1/ws` WebSocket channel.
-  - Real-time device cards displaying live WLED power status, MAC, IP, and LED count.
-  - Interactive controls: Power toggle, master brightness slider, color spectrum picker, effect & palette dropdowns.
-  - Device edit modal for setting custom nicknames.
+  - [x] Connect Svelte UI to `/api/v1/ws` WebSocket channel.
+  - [x] Real-time device cards displaying live WLED power status, MAC, IP, and LED count.
+  - [x] Interactive controls: Power toggle, master brightness slider, color spectrum picker, effect & palette dropdowns.
+  - [x] Device inline nickname editor for setting custom names in SQLite.
+  - [x] Manual IP address addition modal for networks without mDNS.
 - **Acceptance Criteria**:
-  - Booting backend on a network with WLED devices auto-populates the Svelte UI in real time.
-  - Toggling power or changing brightness in Svelte UI instantly updates the physical WLED strip.
+  - [x] Booting backend on a network with WLED devices auto-populates the Svelte UI in real time.
+  - [x] Toggling power, changing brightness, setting colors, or picking effects in Svelte UI instantly updates the physical WLED strip.
 
 ---
 
