@@ -1,0 +1,39 @@
+frontend/src/App.svelte
+  h_e41d77f8309f5c 44
+  h_e41d77f8309f5c 51,222,437,457,495,605,624,658,775,838
+backend/src/audio_engine.go
+  h_e41d77f8309f5c 1-73
+backend/src/audio_engine_test.go
+  h_e41d77f8309f5c 1-29
+backend/src/ddp_streamer.go
+  h_e41d77f8309f5c 46-53,63,69,241-245,248,257,384,416-419,433-468,546,553-555,558-611
+backend/src/ddp_streamer_test.go
+  h_e41d77f8309f5c 54-55,58
+backend/src/hub.go
+  h_e41d77f8309f5c 25-30,42-56
+backend/src/main.go
+  h_e41d77f8309f5c 42-43,45
+frontend/src/app.css
+  h_e41d77f8309f5c 9,26-51
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 2-15,26,45-50,58-64,143,197-245,285-368,373,390
+frontend/src/lib/components/GroupCard.svelte
+  h_e41d77f8309f5c 14-15,28,49-54,61-67,148,228-276,333-414,434,448-449
+frontend/src/lib/components/RoomCard.svelte
+  h_e41d77f8309f5c 13-14,28,48-53,63-69,278,368-416,480-555,569
+frontend/src/lib/stores/audioStore.svelte.js
+  h_e41d77f8309f5c 1-156
+frontend/tests/stores/audioStore.test.js
+  h_e41d77f8309f5c 1-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d2ba5622c2ed9e7a6b71f84e404e485d612313cc",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
