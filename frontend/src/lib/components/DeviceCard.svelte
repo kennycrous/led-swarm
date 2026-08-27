@@ -23,9 +23,10 @@
   let selectedColor = $state('#06b6d4');
   let isMenuOpen = $state(false);
 
-  $effect(() => {
+  function startEditing() {
     nickname = device.name;
-  });
+    isEditingName = true;
+  }
 
   const presetColors = [
     { name: 'Cyan Neon', hex: '#06b6d4', r: 6, g: 182, b: 212 },
@@ -77,7 +78,7 @@
             <h3 class="font-semibold text-slate-100 group-hover:text-cyan-300 transition-colors text-sm">
               {device.name}
             </h3>
-            <button onclick={() => isEditingName = true} class="opacity-0 group-hover/edit:opacity-100 p-0.5 text-slate-500 hover:text-slate-300">
+            <button onclick={startEditing} class="opacity-0 group-hover/edit:opacity-100 p-0.5 text-slate-500 hover:text-slate-300">
               <Edit2 class="w-3 h-3" />
             </button>
           </div>
@@ -143,7 +144,7 @@
     <!-- Quick Color Swatches -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1.5">
-        {#each presetColors as c}
+        {#each presetColors as c (c.hex)}
           <button 
             onclick={() => applyColor(c)}
             style="background-color: {c.hex}"

@@ -561,7 +561,7 @@
                 Saved Multi-Strip Scene Snapshots ({groupStore.scenes.length})
               </h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {#each groupStore.scenes as scene}
+                {#each groupStore.scenes as scene (scene.id)}
                   <SceneCard 
                     scene={scene}
                     isPinned={dashboardStore.isPinned(scene.id)}
@@ -591,7 +591,7 @@
               </div>
             {:else}
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {#each groupStore.groups as group}
+                {#each groupStore.groups as group (group.id)}
                   <GroupCard 
                     group={group}
                     allDevices={store.devices}

@@ -65,7 +65,7 @@
         <div>
           <span class="block text-xs font-mono text-slate-400 mb-2">Preset Icon</span>
           <div class="grid grid-cols-3 gap-2">
-            {#each availableIcons as item}
+            {#each availableIcons as item (item.id)}
               {@const IconComp = item.icon}
               <button
                 type="button"

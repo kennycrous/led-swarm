@@ -1,0 +1,40 @@
+name: LED Swarm CI Workflow
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go Environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run Static Analysis & Linters (go vet, ESLint, svelte-check)
+        run: make lint
+
+      - name: Run Unit & Integration Tests (go test, Vitest)
+        run: make test
+
+      - name: Validate Production Build
+        run: make build

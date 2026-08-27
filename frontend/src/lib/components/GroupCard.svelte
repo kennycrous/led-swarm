@@ -134,7 +134,7 @@
 
   <!-- Group Strip Members Badges -->
   <div class="flex flex-wrap gap-1.5 -mt-1">
-    {#each assignedDevices as dev}
+    {#each assignedDevices as dev (dev.id)}
       <span class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md border {dev.isOnline ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-800/50 border-slate-700 text-slate-500'}">
         <Cpu class="w-3 h-3" />
         {dev.name}
@@ -147,7 +147,7 @@
     <!-- Quick Color Swatches & Indicator -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1.5">
-        {#each presetColors as c}
+        {#each presetColors as c (c.hex)}
           <button 
             onclick={() => applyColor(c)}
             style="background-color: {c.hex}"

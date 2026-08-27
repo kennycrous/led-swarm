@@ -138,21 +138,21 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟡 Slice 005: Automated Testing, Linting & Code Quality Suite
+### 🟢 Slice 005 [COMPLETED]: Automated Testing, Linting & Code Quality Suite
 - **Objective**: Establish comprehensive automated unit testing, component testing, static code analysis, and CI linting for both the Go backend and Svelte 5 frontend.
 - **Backend Deliverables**:
-  - [ ] Go unit and integration tests (`go test ./...`) covering SQLite database queries, device manager state cache, group/scene batch dispatching, and REST API handlers.
-  - [ ] Mock WLED WebSocket and mDNS server test harnesses for offline network testing.
-  - [ ] Static analysis and linting setup (`golangci-lint` or standard `go vet`).
+  - [x] Go unit and integration tests (`go test ./...`) covering SQLite database queries, device manager state cache, group/scene batch dispatching, and REST API handlers.
+  - [x] Mock WLED WebSocket and mDNS server test harnesses for offline network testing.
+  - [x] Static analysis and linting setup (`golangci-lint` or standard `go vet`).
 - **Frontend Deliverables**:
-  - [ ] ESLint & `svelte-check` type checking pipeline for Svelte 5 components (`npm run lint`, `npm run check`).
-  - [ ] Vitest + Testing Library component test suite verifying store reactivity, card rendering, and user interactions.
+  - [x] ESLint & `svelte-check` type checking pipeline for Svelte 5 components (`npm run lint`, `npm run check`).
+  - [x] Vitest + Testing Library component test suite verifying store reactivity, card rendering, and user interactions.
 - **CI / Build Infrastructure**:
-  - [ ] Makefile target additions (`make test`, `make lint`) for unified local verification.
-  - [ ] GitHub Actions CI workflow configuration executing tests and linters on pull requests.
+  - [x] Makefile target additions (`make test`, `make lint`) for unified local verification.
+  - [x] GitHub Actions CI workflow configuration executing tests and linters on pull requests.
 - **Acceptance Criteria**:
-  - [ ] `make test` runs all backend and frontend unit tests with 100% pass rate.
-  - [ ] `make lint` verifies code style and type safety across Go backend and Svelte frontend with zero warnings.
+  - [x] `make test` runs all backend and frontend unit tests with 100% pass rate.
+  - [x] `make lint` verifies code style and type safety across Go backend and Svelte frontend with zero warnings.
 
 ---
 

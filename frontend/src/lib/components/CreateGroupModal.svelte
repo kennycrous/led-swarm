@@ -79,7 +79,7 @@
         <div>
           <span class="block text-xs font-mono text-slate-400 mb-2">Assign WLED Light Strips</span>
           <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1">
-            {#each allDevices as dev}
+            {#each allDevices as dev (dev.id)}
               <button
                 type="button"
                 onclick={() => toggleDevice(dev.id)}

@@ -55,7 +55,7 @@
         {#if options.length === 0}
           <div class="px-3 py-1.5 text-slate-500 text-[11px]">Solid</div>
         {:else}
-          {#each options as opt, idx}
+          {#each options as opt, idx (idx)}
             <button
               type="button"
               onclick={() => handleSelect(idx)}

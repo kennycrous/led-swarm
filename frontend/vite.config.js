@@ -9,6 +9,11 @@ export default defineConfig({
       '$lib': path.resolve('./src/lib')
     }
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: []
+  },
   server: {
     proxy: {
       '/api': {
