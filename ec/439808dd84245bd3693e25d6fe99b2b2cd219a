@@ -1,0 +1,34 @@
+Makefile
+  h_e41d77f8309f5c 69
+backend/src/dashboard_manager_test.go
+  h_e41d77f8309f5c 77-99
+backend/src/db_test.go
+  h_e41d77f8309f5c 28,53,67,90,110,131,153,169,179,192
+backend/src/device_manager_test.go
+  h_e41d77f8309f5c 1-69
+backend/src/group_manager_test.go
+  h_e41d77f8309f5c 1-57
+backend/src/server_test.go
+  h_e41d77f8309f5c 59,75-88,106,118,135-147
+backend/src/wled_test.go
+  h_e41d77f8309f5c 1-47
+frontend/tests/components/CyberSelect.test.js
+  h_e41d77f8309f5c 1-33
+frontend/tests/stores/dashboardStore.test.js
+  h_e41d77f8309f5c 2,11
+frontend/tests/stores/deviceStore.test.js
+  h_e41d77f8309f5c 2
+frontend/tests/stores/groupStore.test.js
+  h_e41d77f8309f5c 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ec439808dd84245bd3693e25d6fe99b2b2cd219a",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
