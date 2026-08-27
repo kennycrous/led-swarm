@@ -8,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/glebarez/go-sqlite"
+	"github.com/google/uuid"
 )
 
 type Group struct {
@@ -24,6 +25,24 @@ type Scene struct {
 	Icon       string `json:"icon"`
 	ConfigJSON string `json:"configJson"`
 	CreatedAt  string `json:"createdAt"`
+}
+
+type DashboardItem struct {
+	ID        string `json:"id"`
+	ItemID    string `json:"itemId"`
+	ItemType  string `json:"itemType"` // "device", "group", "scene"
+	Position  int    `json:"position"`
+	Size      string `json:"size"`     // "compact", "normal", "wide"
+	PanelID   string `json:"panelId"`  // "default" or custom panel id
+	IsPinned  bool   `json:"isPinned"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type DashboardPanel struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Position  int    `json:"position"`
+	CreatedAt string `json:"createdAt"`
 }
 
 type Database struct {
@@ -94,6 +113,24 @@ func (d *Database) initSchema() error {
 		name TEXT NOT NULL,
 		icon TEXT,
 		config_json TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS dashboard_items (
+		id TEXT PRIMARY KEY,
+		item_id TEXT UNIQUE NOT NULL,
+		item_type TEXT NOT NULL,
+		position INTEGER DEFAULT 0,
+		size TEXT DEFAULT 'normal',
+		panel_id TEXT DEFAULT '',
+		is_pinned BOOLEAN DEFAULT TRUE,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS dashboard_panels (
+		id TEXT PRIMARY KEY,
+		title TEXT NOT NULL,
+		position INTEGER DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	`
@@ -308,6 +345,131 @@ func (d *Database) GetScenes() ([]Scene, error) {
 	}
 
 	return scenes, nil
+}
+
+// Dashboard Items Database Operations
+
+func (d *Database) PinDashboardItem(itemID string, itemType string, isPinned bool) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	query := `
+	INSERT INTO dashboard_items (id, item_id, item_type, is_pinned)
+	VALUES (?, ?, ?, ?)
+	ON CONFLICT(item_id) DO UPDATE SET
+		is_pinned = excluded.is_pinned;
+	`
+	id := uuid.New().String()
+	_, err := d.db.Exec(query, id, itemID, itemType, isPinned)
+	return err
+}
+
+func (d *Database) UpdateDashboardItemSize(itemID string, size string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	query := `
+	INSERT INTO dashboard_items (id, item_id, item_type, size, is_pinned)
+	VALUES (?, ?, 'device', ?, TRUE)
+	ON CONFLICT(item_id) DO UPDATE SET
+		size = excluded.size;
+	`
+	id := uuid.New().String()
+	_, err := d.db.Exec(query, id, itemID, size)
+	return err
+}
+
+func (d *Database) UpdateDashboardItemPanel(itemID string, panelID string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	query := `
+	INSERT INTO dashboard_items (id, item_id, item_type, panel_id, is_pinned)
+	VALUES (?, ?, 'device', ?, TRUE)
+	ON CONFLICT(item_id) DO UPDATE SET
+		panel_id = excluded.panel_id;
+	`
+	id := uuid.New().String()
+	_, err := d.db.Exec(query, id, itemID, panelID)
+	return err
+}
+
+func (d *Database) UpdateDashboardItemPosition(itemID string, position int) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	_, err := d.db.Exec("UPDATE dashboard_items SET position = ? WHERE item_id = ?", position, itemID)
+	return err
+}
+
+func (d *Database) GetDashboardItems() ([]DashboardItem, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	rows, err := d.db.Query("SELECT id, item_id, item_type, position, COALESCE(size, 'normal'), COALESCE(panel_id, ''), is_pinned, created_at FROM dashboard_items ORDER BY position ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []DashboardItem
+	for rows.Next() {
+		var item DashboardItem
+		if err := rows.Scan(&item.ID, &item.ItemID, &item.ItemType, &item.Position, &item.Size, &item.PanelID, &item.IsPinned, &item.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	return items, nil
+}
+
+func (d *Database) SaveDashboardPanel(panel DashboardPanel) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	query := `
+	INSERT INTO dashboard_panels (id, title, position)
+	VALUES (?, ?, ?)
+	ON CONFLICT(id) DO UPDATE SET
+		title = EXCLUDED.title,
+		position = EXCLUDED.position
+	`
+	_, err := d.db.Exec(query, panel.ID, panel.Title, panel.Position)
+	return err
+}
+
+func (d *Database) GetDashboardPanels() ([]DashboardPanel, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	rows, err := d.db.Query("SELECT id, title, position, created_at FROM dashboard_panels ORDER BY position ASC, created_at ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var panels []DashboardPanel
+	for rows.Next() {
+		var p DashboardPanel
+		if err := rows.Scan(&p.ID, &p.Title, &p.Position, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		panels = append(panels, p)
+	}
+	return panels, nil
+}
+
+func (d *Database) DeleteDashboardPanel(id string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	_, err := d.db.Exec("DELETE FROM dashboard_panels WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+	_, err = d.db.Exec("UPDATE dashboard_items SET panel_id = '' WHERE panel_id = ?", id)
+	return err
 }
 
 func (d *Database) Close() error {

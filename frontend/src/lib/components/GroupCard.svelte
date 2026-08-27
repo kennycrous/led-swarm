@@ -1,17 +1,22 @@
 <script>
-  import { Power, Sun, Palette, Sparkles, Trash2, Layers, Cpu } from 'lucide-svelte';
+  import { Power, Sun, Palette, Sparkles, Trash2, Layers, Cpu, Pin, Maximize2, MoreVertical } from 'lucide-svelte';
+  import CyberSelect from './CyberSelect.svelte';
 
   let { 
     group, 
     allDevices = [],
     effects = [], 
     palettes = [],
+    isPinned = true,
+    cardSize = 'normal',
     onTogglePower = () => {},
     onSetBrightness = () => {},
     onSetColor = () => {},
     onSetEffect = () => {},
     onSetPalette = () => {},
-    onDelete = () => {} 
+    onDelete = () => {},
+    onTogglePin = () => {},
+    onToggleSize = () => {}
   } = $props();
 
   let groupPower = $state(true);
@@ -19,6 +24,7 @@
   let selectedColor = $state('#06b6d4');
   let selectedEffect = $state(0);
   let selectedPalette = $state(0);
+  let isMenuOpen = $state(false);
 
   const presetColors = [
     { name: 'Cyan Neon', hex: '#06b6d4', r: 6, g: 182, b: 212 },
@@ -43,16 +49,16 @@
   }
 </script>
 
-<div class="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4 relative overflow-hidden group border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
+<div class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full transition-all duration-300 {isMenuOpen ? 'z-50' : 'hover:z-30 z-10'} border-purple-500/20 hover:border-purple-500/40">
   
-  <!-- Top Accent Status Bar -->
-  <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-amber-500"></div>
+  <!-- Top Accent Status Pill Bar -->
+  <div class="w-full h-1 rounded-full bg-gradient-to-r from-purple-500 via-cyan-500 to-amber-500"></div>
 
-  <!-- Group Header -->
-  <div class="flex items-center justify-between pt-1 pb-2 border-b border-slate-800/80">
-    <div class="flex items-center gap-3">
-      <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
-        <Layers class="w-5 h-5" />
+  <!-- FUNCTIONAL GROUP HEADER & OPTIONS MENU -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2 flex-1">
+      <div class="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+        <Layers class="w-4 h-4" />
       </div>
       <div>
         <h3 class="font-semibold text-slate-100 text-sm tracking-wide">{group.name}</h3>
@@ -62,31 +68,72 @@
       </div>
     </div>
 
-    <!-- Power & Delete Controls -->
-    <div class="flex items-center gap-2">
+    <!-- Power, Delete & Card Options Menu -->
+    <div class="flex items-center gap-1.5 relative">
       <button 
         onclick={() => {
           groupPower = !groupPower;
           onTogglePower(group.id, groupPower);
         }}
-        class="p-2 rounded-xl transition-all duration-200 {groupPower ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan' : 'bg-slate-900/80 text-slate-600 border border-slate-800'}"
+        class="p-2.5 rounded-xl transition-all duration-200 {groupPower ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan' : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
         title="Toggle Group Power"
       >
         <Power class="w-4 h-4" />
       </button>
 
+      <!-- Card Options Dropdown Trigger -->
       <button 
-        onclick={() => onDelete(group.id)}
-        class="p-2 rounded-xl bg-slate-900/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition-all duration-200 cursor-pointer"
-        title="Delete Group"
+        onclick={() => isMenuOpen = !isMenuOpen}
+        class="p-2.5 rounded-xl bg-[#090e17]/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all cursor-pointer"
+        title="Card Options"
       >
-        <Trash2 class="w-4 h-4" />
+        <MoreVertical class="w-4 h-4" />
       </button>
+
+      <!-- Glassmorphic Cyber Context Dropdown Menu -->
+      {#if isMenuOpen}
+        <div 
+          class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-purple-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(168,85,247,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
+        >
+          <button 
+            onclick={() => {
+              onToggleSize(group.id);
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-purple-300 hover:bg-purple-500/15 transition-all text-left cursor-pointer"
+          >
+            <Maximize2 class="w-3.5 h-3.5 text-purple-400" />
+            <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
+          </button>
+
+          <button 
+            onclick={() => {
+              onTogglePin(group.id, 'group');
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-purple-300 hover:bg-purple-500/15 transition-all text-left cursor-pointer"
+          >
+            <Pin class="w-3.5 h-3.5 text-purple-400" />
+            <span>{isPinned ? 'Unpin from Canvas' : 'Pin to Dashboard'}</span>
+          </button>
+
+          <button 
+            onclick={() => {
+              onDelete(group.id);
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-500/15 transition-all text-left cursor-pointer border-t border-slate-800/80 mt-1 pt-1.5"
+          >
+            <Trash2 class="w-3.5 h-3.5 text-rose-400" />
+            <span>Delete Group</span>
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 
   <!-- Group Strip Members Badges -->
-  <div class="flex flex-wrap gap-1.5">
+  <div class="flex flex-wrap gap-1.5 -mt-1">
     {#each assignedDevices as dev}
       <span class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md border {dev.isOnline ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-800/50 border-slate-700 text-slate-500'}">
         <Cpu class="w-3 h-3" />
@@ -95,7 +142,7 @@
     {/each}
   </div>
 
-  <!-- Controls Grid -->
+  <!-- Controls Area -->
   <div class="space-y-3 pt-1">
     <!-- Quick Color Swatches & Indicator -->
     <div class="flex items-center justify-between">
@@ -118,7 +165,7 @@
     </div>
 
     <!-- Group Brightness Slider -->
-    <div class="flex items-center gap-3 bg-slate-900/40 px-3 py-1.5 rounded-xl border border-slate-800/80">
+    <div class="flex items-center gap-3 bg-[#090e17]/60 px-3 py-1.5 rounded-xl border border-slate-800/80 h-9">
       <Sun class="w-4 h-4 text-purple-400" />
       <input 
         type="range" 
@@ -137,51 +184,37 @@
       </span>
     </div>
 
-    <!-- Group FX & Palette Selectors -->
+    <!-- Custom Glassmorphic CyberSelect Dropdowns -->
     <div class="grid grid-cols-2 gap-2">
-      <!-- FX Selector -->
-      <div class="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 px-2 py-1 rounded-xl">
-        <Sparkles class="w-3.5 h-3.5 text-cyan-400" />
-        <select 
-          value={selectedEffect}
-          onchange={(e) => {
-            selectedEffect = parseInt(e.target.value);
-            onSetEffect(group.id, selectedEffect);
-          }}
-          class="bg-transparent text-[11px] font-mono text-slate-300 w-full focus:outline-none cursor-pointer"
-        >
-          {#if effects.length === 0}
-            <option value="0" class="bg-slate-900 text-slate-200">Solid</option>
-          {/if}
-          {#each effects as fxName, index}
-            <option value={index} class="bg-slate-900 text-slate-200">{fxName}</option>
-          {/each}
-        </select>
-      </div>
+      <!-- FX CyberSelect -->
+      <CyberSelect 
+        value={selectedEffect}
+        options={effects}
+        icon={Sparkles}
+        iconColor="text-cyan-400"
+        hoverBorder="hover:border-cyan-500/40"
+        onChange={(fxId) => {
+          selectedEffect = fxId;
+          onSetEffect(group.id, fxId);
+        }}
+      />
 
-      <!-- Palette Selector -->
-      <div class="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 px-2 py-1 rounded-xl">
-        <Palette class="w-3.5 h-3.5 text-purple-400" />
-        <select 
-          value={selectedPalette}
-          onchange={(e) => {
-            selectedPalette = parseInt(e.target.value);
-            onSetPalette(group.id, selectedPalette);
-            if (selectedEffect === 0) {
-              selectedEffect = 2; // Breathe
-              onSetEffect(group.id, 2);
-            }
-          }}
-          class="bg-transparent text-[11px] font-mono text-slate-300 w-full focus:outline-none cursor-pointer"
-        >
-          {#if palettes.length === 0}
-            <option value="0" class="bg-slate-900 text-slate-200">Default Palette</option>
-          {/if}
-          {#each palettes as palName, index}
-            <option value={index} class="bg-slate-900 text-slate-200">{palName}</option>
-          {/each}
-        </select>
-      </div>
+      <!-- Palette CyberSelect -->
+      <CyberSelect 
+        value={selectedPalette}
+        options={palettes}
+        icon={Palette}
+        iconColor="text-purple-400"
+        hoverBorder="hover:border-purple-500/40"
+        onChange={(palId) => {
+          selectedPalette = palId;
+          onSetPalette(group.id, palId);
+          if (selectedEffect === 0) {
+            selectedEffect = 2; // Breathe
+            onSetEffect(group.id, 2);
+          }
+        }}
+      />
     </div>
   </div>
 </div>

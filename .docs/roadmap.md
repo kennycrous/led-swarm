@@ -118,23 +118,23 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🔵 Slice 004: Customizable Dashboard & Device Visibility Management
+### 🟢 Slice 004 [COMPLETED]: Customizable Dashboard & Device Visibility Management
 - **Objective**: Enable users to pin/unpin individual WLED light strips, virtual groups, or scene presets to/from the main Cyber Dashboard layout, and provide a dedicated Strips & Devices management view in Settings.
 - **Backend Deliverables**:
-  - Database table `dashboard_items` (item_id, item_type: 'device'|'group'|'scene', position, is_pinned).
-  - Auto-pinning logic: Newly discovered WLED devices automatically pin to the dashboard layout.
-  - REST API & Wails desktop endpoints for pinning, unpinning, and reordering dashboard cards (`/api/v1/dashboard/pins`, `/api/v1/dashboard/reorder`).
+  - [x] Database table `dashboard_items` (item_id, item_type: 'device'|'group'|'scene', position, size, is_pinned).
+  - [x] Auto-pinning logic: Newly discovered WLED devices automatically pin to the dashboard layout.
+  - [x] REST API & Wails desktop endpoints for pinning, unpinning, card sizing, and reordering dashboard cards (`/api/v1/dashboard/pin`, `/api/v1/dashboard/size`, `/api/v1/dashboard/reorder`).
 - **Frontend Deliverables**:
   - **Customizable Main Dashboard**:
-    - Renders pinned cards (mix of Individual Strip Cards, Group Cards, and 1-Click Scene Preset Cards).
-    - Quick "Pin / Unpin" toggle action on cards.
+    - [x] Single unified canvas grid displaying pinned cards (mix of Individual Strip Cards, Group Cards, and 1-Click Scene Preset Cards).
+    - [x] Card size toggle (Compact, Normal, Wide) and quick "Pin / Unpin" toggle action on cards.
   - **Settings -> Strips & Devices Management View**:
-    - Complete list of ALL discovered and saved WLED light strips on the network regardless of whether they are visible/pinned on the main dashboard.
-    - Per-strip management: Pin/unpin toggle, nickname editor, manual IP adder, discover streams trigger, and delete/forget device action.
+    - [x] Complete inventory view of ALL discovered and saved WLED light strips on the network regardless of dashboard visibility status.
+    - [x] Per-strip management: Pin/unpin toggle, nickname editor, manual IP adder, discover streams trigger, and delete/forget device action.
 - **Acceptance Criteria**:
-  - User can unpin 5 individual strips from the dashboard while keeping their parent Group card visible on the dashboard.
-  - Settings -> "Strips & Devices" displays all WLED strips on the network regardless of dashboard visibility status.
-  - Newly discovered WLED devices auto-appear on the dashboard and in Settings.
+  - [x] User can unpin individual strips from the dashboard while keeping their parent Group card visible on the dashboard.
+  - [x] Settings -> "Strips & Devices" displays all WLED strips on the network regardless of dashboard visibility status.
+  - [x] Newly discovered WLED devices auto-appear on the dashboard and in Settings.
 
 ---
 
