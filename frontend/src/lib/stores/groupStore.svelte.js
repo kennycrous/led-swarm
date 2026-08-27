@@ -54,6 +54,25 @@ export function getGroupStore() {
       }
     },
 
+    async renameGroup(groupId, newName) {
+      try {
+        const found = groups.find((g) => g.id === groupId);
+        if (found) found.name = newName;
+
+        if (isWails && window.go?.main?.App?.UpdateGroupName) {
+          await window.go.main.App.UpdateGroupName(groupId, newName);
+        } else {
+          await fetch('/api/v1/groups/name', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: groupId, name: newName })
+          });
+        }
+      } catch (e) {
+        console.error('Failed to rename group:', e);
+      }
+    },
+
     async deleteGroup(id) {
       try {
         if (isWails && window.go?.main?.App?.DeleteGroup) {

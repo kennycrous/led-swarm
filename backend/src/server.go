@@ -52,6 +52,7 @@ func (s *Server) Start(port int) error {
 	// Group & Scene API Endpoints
 	mux.HandleFunc("/api/v1/groups", s.handleGroups)
 	mux.HandleFunc("/api/v1/groups/", s.handleGroups)
+	mux.HandleFunc("/api/v1/groups/name", s.handleRenameGroup)
 	mux.HandleFunc("/api/v1/groups/state", s.handleSetGroupState)
 	mux.HandleFunc("/api/v1/scenes", s.handleScenes)
 	mux.HandleFunc("/api/v1/scenes/", s.handleScenes)
@@ -65,11 +66,13 @@ func (s *Server) Start(port int) error {
 	mux.HandleFunc("/api/v1/dashboard/panel", s.handleSetDashboardItemPanel)
 	mux.HandleFunc("/api/v1/dashboard/panels", s.handleDashboardPanels)
 	mux.HandleFunc("/api/v1/dashboard/panels/", s.handleDashboardPanels)
+	mux.HandleFunc("/api/v1/dashboard/panels/rename", s.handleRenamePanel)
 	mux.HandleFunc("/api/v1/dashboard/reorder", s.handleReorderDashboardItems)
 
 	// 2D Canvas API Endpoints
 	mux.HandleFunc("/api/v1/canvas/rooms", s.handleCanvasRooms)
 	mux.HandleFunc("/api/v1/canvas/rooms/", s.handleCanvasRooms)
+	mux.HandleFunc("/api/v1/canvas/rooms/rename", s.handleRenameRoom)
 	mux.HandleFunc("/api/v1/canvas/placements", s.handleCanvasPlacements)
 	mux.HandleFunc("/api/v1/canvas/placement", s.handleSaveCanvasPlacement)
 	mux.HandleFunc("/api/v1/canvas/placements/batch", s.handleBatchSaveCanvasPlacements)
@@ -567,4 +570,70 @@ func (s *Server) handleCanvasRooms(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func (s *Server) handleRenameGroup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ID == "" || req.Name == "" {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	g, err := s.groupMgr.RenameGroup(req.ID, req.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(g)
+}
+
+func (s *Server) handleRenameRoom(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ID == "" || req.Title == "" {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	room, err := s.canvasMgr.UpdateRoomTitle(req.ID, req.Title)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(room)
+}
+
+func (s *Server) handleRenamePanel(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ID == "" || req.Title == "" {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	panel, err := s.dashboardMgr.RenamePanel(req.ID, req.Title)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(panel)
 }

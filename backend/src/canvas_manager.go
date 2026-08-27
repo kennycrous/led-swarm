@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sort"
 	"sync"
@@ -93,6 +94,25 @@ func (cm *CanvasManager) CreateRoom(title string, description string, width int,
 
 	cm.broadcastCanvasUpdate()
 	return room, nil
+}
+
+func (cm *CanvasManager) UpdateRoomTitle(id string, newTitle string) (*CanvasRoom, error) {
+	cm.mu.Lock()
+	room, ok := cm.rooms[id]
+	if !ok {
+		cm.mu.Unlock()
+		return nil, fmt.Errorf("room not found: %s", id)
+	}
+	room.Title = newTitle
+	cm.rooms[id] = room
+	cm.mu.Unlock()
+
+	if err := cm.db.SaveCanvasRoom(room); err != nil {
+		return nil, err
+	}
+
+	cm.broadcastCanvasUpdate()
+	return &room, nil
 }
 
 func (cm *CanvasManager) GetRooms() []CanvasRoom {

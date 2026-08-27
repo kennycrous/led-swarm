@@ -23,7 +23,8 @@
     Grid,
     Trash2,
     X,
-    PanelTop
+    PanelTop,
+    Edit3
   } from 'lucide-svelte';
   import { getDeviceStore } from '$lib/stores/deviceStore.svelte.js';
   import { getGroupStore } from '$lib/stores/groupStore.svelte.js';
@@ -65,6 +66,8 @@
   let isCaptureSceneModalOpen = $state(false);
   let isAddPanelModalOpen = $state(false);
   let newPanelTitle = $state('');
+  let editingPanelId = $state(null);
+  let editingPanelTitle = $state('');
 
   // Drag and Drop active target tracking
   let draggedItemId = $state(null);
@@ -509,10 +512,49 @@
             >
               <!-- Panel Header -->
               <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
-                <h2 class="text-sm font-mono tracking-wider text-slate-200 flex items-center gap-2">
-                  <PanelTop class="w-4 h-4 text-purple-400" />
-                  {panel.title.toUpperCase()} ({panelCards.length})
-                </h2>
+                {#if editingPanelId === panel.id}
+                  <form
+                    onsubmit={(e) => {
+                      e.preventDefault();
+                      if (editingPanelTitle.trim()) {
+                        dashboardStore.renamePanel(panel.id, editingPanelTitle.trim());
+                      }
+                      editingPanelId = null;
+                    }}
+                    class="flex items-center gap-2"
+                  >
+                    <PanelTop class="w-4 h-4 text-purple-400" />
+                    <input
+                      type="text"
+                      bind:value={editingPanelTitle}
+                      onblur={() => {
+                        if (editingPanelTitle.trim()) {
+                          dashboardStore.renamePanel(panel.id, editingPanelTitle.trim());
+                        }
+                        editingPanelId = null;
+                      }}
+                      class="bg-[#06090e] border border-purple-500/50 rounded-lg px-2 py-0.5 text-xs font-mono font-bold text-slate-200 focus:outline-none focus:border-cyan-400 w-48"
+                    />
+                  </form>
+                {:else}
+                  <button
+                    type="button"
+                    onclick={() => {
+                      editingPanelId = panel.id;
+                      editingPanelTitle = panel.title;
+                    }}
+                    class="group/panelTitle flex items-center gap-2 cursor-pointer text-left border-0 bg-transparent p-0"
+                    title="Click to rename panel"
+                  >
+                    <h2 class="text-sm font-mono tracking-wider text-slate-200 flex items-center gap-2">
+                      <PanelTop class="w-4 h-4 text-purple-400" />
+                      {panel.title.toUpperCase()} ({panelCards.length})
+                    </h2>
+                    <Edit3
+                      class="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover/panelTitle:opacity-100 transition-opacity"
+                    />
+                  </button>
+                {/if}
                 <button
                   onclick={() => dashboardStore.deletePanel(panel.id)}
                   class="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
@@ -573,6 +615,7 @@
                             groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
                           onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
                           onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                          onRename={(id, name) => groupStore.renameGroup(id, name)}
                           onDelete={(id) => groupStore.deleteGroup(id)}
                           onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                           onToggleSize={(id) => cycleCardSize(id, item.size)}
@@ -598,6 +641,7 @@
                             canvasStore.selectRoom(item.data.id);
                             activeTab = 'canvas';
                           }}
+                          onRename={(id, title) => canvasStore.renameRoom(id, title)}
                           onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                           onToggleSize={(id) => cycleCardSize(id, item.size)}
                           onDelete={(id) => canvasStore.deleteRoom(id)}
@@ -711,6 +755,7 @@
                     canvasStore.selectRoom(room.id);
                     activeTab = 'canvas';
                   }}
+                  onRename={(id, title) => canvasStore.renameRoom(id, title)}
                   onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                   onToggleSize={(id) => cycleCardSize(id, dashboardStore.getSize(room.id))}
                   onDelete={(id) => canvasStore.deleteRoom(id)}
@@ -776,6 +821,7 @@
                     onSetColor={(id, r, g, b) => groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
                     onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
                     onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                    onRename={(id, name) => groupStore.renameGroup(id, name)}
                     onDelete={(id) => groupStore.deleteGroup(id)}
                     onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                     onToggleSize={(id) => cycleCardSize(id, dashboardStore.getSize(group.id))}

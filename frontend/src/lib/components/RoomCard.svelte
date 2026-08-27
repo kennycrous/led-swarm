@@ -1,5 +1,16 @@
 <script>
-  import { LayoutGrid, Power, Sun, Palette, Sparkles, Pin, Maximize2, MoreVertical, Trash2 } from 'lucide-svelte';
+  import {
+    LayoutGrid,
+    Power,
+    Sun,
+    Palette,
+    Sparkles,
+    Pin,
+    Maximize2,
+    MoreVertical,
+    Trash2,
+    Edit3
+  } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
   let {
@@ -12,17 +23,27 @@
     cardSize = 'normal',
     showSizeToggle = false,
     onEditLayout = () => {},
+    onRename = () => {},
     onTogglePin = () => {},
     onToggleSize = () => {},
     onDelete = null
   } = $props();
 
   let isMenuOpen = $state(false);
+  let isEditingTitle = $state(false);
+  let editedTitle = $state('');
   let roomPower = $state(true);
   let roomBrightness = $state(200);
   let selectedColor = $state('#06b6d4');
   let selectedEffect = $state(0);
   let selectedPalette = $state(0);
+
+  function handleSaveTitle() {
+    if (editedTitle.trim() && editedTitle.trim() !== room.title) {
+      onRename(room.id, editedTitle.trim());
+    }
+    isEditingTitle = false;
+  }
 
   const presetColors = [
     { name: 'Cyan Neon', hex: '#06b6d4', r: 6, g: 182, b: 212 },
@@ -190,7 +211,35 @@
         <LayoutGrid class="w-4 h-4" />
       </div>
       <div>
-        <h3 class="font-semibold text-slate-100 text-sm tracking-wide">{room.title}</h3>
+        {#if isEditingTitle}
+          <form
+            onsubmit={(e) => {
+              e.preventDefault();
+              handleSaveTitle();
+            }}
+            class="flex items-center gap-1"
+          >
+            <input
+              type="text"
+              bind:value={editedTitle}
+              onblur={handleSaveTitle}
+              class="bg-[#06090e] border border-cyan-500/50 rounded-lg px-2 py-0.5 text-xs font-semibold text-slate-100 focus:outline-none focus:border-cyan-400 w-36"
+            />
+          </form>
+        {:else}
+          <button
+            type="button"
+            onclick={() => {
+              isEditingTitle = true;
+              editedTitle = room.title;
+            }}
+            class="group/title flex items-center gap-1.5 cursor-pointer text-left border-0 bg-transparent p-0"
+            title="Click to rename room"
+          >
+            <h3 class="font-semibold text-slate-100 text-sm tracking-wide">{room.title}</h3>
+            <Edit3 class="w-3 h-3 text-slate-500 opacity-0 group-hover/title:opacity-100 transition-opacity" />
+          </button>
+        {/if}
         <p class="text-[11px] font-mono text-slate-400">
           {roomDevices.length} Strips ({onlineCount} Online)
         </p>
@@ -223,6 +272,18 @@
         <div
           class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-cyan-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
         >
+          <button
+            onclick={() => {
+              isEditingTitle = true;
+              editedTitle = room.title;
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-cyan-300 hover:bg-cyan-500/15 transition-all text-left cursor-pointer"
+          >
+            <Edit3 class="w-3.5 h-3.5 text-cyan-400" />
+            <span>Rename Room</span>
+          </button>
+
           <button
             onclick={() => {
               onEditLayout(room.id);

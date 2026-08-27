@@ -168,8 +168,17 @@ func (a *App) GetDashboardPanels() ([]DashboardPanel, error) {
 	return a.dashboardMgr.GetPanels()
 }
 
+func (a *App) UpdateGroupName(id string, name string) error {
+	_, err := a.groupMgr.RenameGroup(id, name)
+	return err
+}
+
 func (a *App) AddDashboardPanel(title string) (*DashboardPanel, error) {
 	return a.dashboardMgr.AddPanel("", title)
+}
+
+func (a *App) RenameDashboardPanel(id string, title string) (*DashboardPanel, error) {
+	return a.dashboardMgr.RenamePanel(id, title)
 }
 
 func (a *App) DeleteDashboardPanel(id string) error {
@@ -182,6 +191,10 @@ func (a *App) GetCanvasRooms() ([]CanvasRoom, error) {
 
 func (a *App) CreateCanvasRoom(title string, description string, width int, height int, deviceIDs []string) (CanvasRoom, error) {
 	return a.canvasMgr.CreateRoom(title, description, width, height, deviceIDs)
+}
+
+func (a *App) UpdateRoomTitle(id string, title string) (*CanvasRoom, error) {
+	return a.canvasMgr.UpdateRoomTitle(id, title)
 }
 
 func (a *App) DeleteCanvasRoom(id string) error {

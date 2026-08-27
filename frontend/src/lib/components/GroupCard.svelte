@@ -1,5 +1,17 @@
 <script>
-  import { Power, Sun, Palette, Sparkles, Trash2, Layers, Cpu, Pin, Maximize2, MoreVertical } from 'lucide-svelte';
+  import {
+    Power,
+    Sun,
+    Palette,
+    Sparkles,
+    Trash2,
+    Layers,
+    Cpu,
+    Pin,
+    Maximize2,
+    MoreVertical,
+    Edit3
+  } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
   let {
@@ -15,6 +27,7 @@
     onSetColor = () => {},
     onSetEffect = () => {},
     onSetPalette = () => {},
+    onRename = () => {},
     onDelete = () => {},
     onTogglePin = () => {},
     onToggleSize = () => {}
@@ -26,6 +39,15 @@
   let selectedEffect = $state(0);
   let selectedPalette = $state(0);
   let isMenuOpen = $state(false);
+  let isEditingName = $state(false);
+  let editedName = $state('');
+
+  function handleSaveName() {
+    if (editedName.trim() && editedName.trim() !== group.name) {
+      onRename(group.id, editedName.trim());
+    }
+    isEditingName = false;
+  }
 
   const presetColors = [
     { name: 'Cyan Neon', hex: '#06b6d4', r: 6, g: 182, b: 212 },
@@ -61,7 +83,35 @@
         <Layers class="w-4 h-4" />
       </div>
       <div>
-        <h3 class="font-semibold text-slate-100 text-sm tracking-wide">{group.name}</h3>
+        {#if isEditingName}
+          <form
+            onsubmit={(e) => {
+              e.preventDefault();
+              handleSaveName();
+            }}
+            class="flex items-center gap-1"
+          >
+            <input
+              type="text"
+              bind:value={editedName}
+              onblur={handleSaveName}
+              class="bg-[#06090e] border border-cyan-500/50 rounded-lg px-2 py-0.5 text-xs font-semibold text-slate-100 focus:outline-none focus:border-cyan-400 w-36"
+            />
+          </form>
+        {:else}
+          <button
+            type="button"
+            onclick={() => {
+              isEditingName = true;
+              editedName = group.name;
+            }}
+            class="group/title flex items-center gap-1.5 cursor-pointer text-left border-0 bg-transparent p-0"
+            title="Click to rename group"
+          >
+            <h3 class="font-semibold text-slate-100 text-sm tracking-wide">{group.name}</h3>
+            <Edit3 class="w-3 h-3 text-slate-500 opacity-0 group-hover/title:opacity-100 transition-opacity" />
+          </button>
+        {/if}
         <p class="text-[11px] font-mono text-slate-400">
           {group.deviceIds?.length ?? 0} Strips ({onlineCount} Online)
         </p>
@@ -97,6 +147,18 @@
         <div
           class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-purple-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(168,85,247,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
         >
+          <button
+            onclick={() => {
+              isEditingName = true;
+              editedName = group.name;
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-cyan-300 hover:bg-cyan-500/15 transition-all text-left cursor-pointer"
+          >
+            <Edit3 class="w-3.5 h-3.5 text-cyan-400" />
+            <span>Rename Group</span>
+          </button>
+
           {#if showSizeToggle}
             <button
               onclick={() => {

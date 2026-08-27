@@ -95,6 +95,25 @@ func (gm *GroupManager) SaveGroup(id string, name string, description string, de
 	return &g, nil
 }
 
+func (gm *GroupManager) RenameGroup(id string, newName string) (*Group, error) {
+	gm.mu.Lock()
+	g, ok := gm.groups[id]
+	if !ok {
+		gm.mu.Unlock()
+		return nil, fmt.Errorf("group not found: %s", id)
+	}
+	g.Name = newName
+	groupCopy := *g
+	gm.mu.Unlock()
+
+	if err := gm.db.SaveGroup(groupCopy); err != nil {
+		return nil, err
+	}
+
+	gm.broadcastUpdate("group_updated", groupCopy)
+	return &groupCopy, nil
+}
+
 func (gm *GroupManager) DeleteGroup(id string) error {
 	if err := gm.db.DeleteGroup(id); err != nil {
 		return err

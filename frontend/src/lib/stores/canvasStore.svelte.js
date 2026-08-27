@@ -126,6 +126,26 @@ class CanvasStore {
     await this.fetchPlacements(roomId);
   }
 
+  async renameRoom(roomId, newTitle) {
+    try {
+      const found = this.rooms.find((r) => r.id === roomId);
+      if (found) found.title = newTitle;
+
+      const wailsApp = getWailsApp();
+      if (wailsApp && typeof wailsApp.UpdateRoomTitle === 'function') {
+        await wailsApp.UpdateRoomTitle(roomId, newTitle);
+      } else {
+        await fetch('/api/v1/canvas/rooms/rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: roomId, title: newTitle })
+        });
+      }
+    } catch (err) {
+      console.error('[CanvasStore] Error renaming room:', err);
+    }
+  }
+
   async fetchPlacements(roomId = '') {
     try {
       const wailsApp = getWailsApp();
