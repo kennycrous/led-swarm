@@ -1,0 +1,40 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 28,97,100-102,104-107,109-110
+backend/src/app.go
+  h_e41d77f8309f5c 5,15,20,25,104-139
+backend/src/db.go
+  h_e41d77f8309f5c 13-28,172-312
+backend/src/group_manager.go
+  h_e41d77f8309f5c 1-291
+backend/src/main.go
+  h_e41d77f8309f5c 39,52,58
+backend/src/server.go
+  h_e41d77f8309f5c 10,18,24,29,47-56,173-305
+backend/src/wled.go
+  h_e41d77f8309f5c 94-112
+frontend/src/App.svelte
+  h_e41d77f8309f5c 14-21,24,27-30,33,39-49,53,85-92,95,130,134-146,166,176,185,210-211,213,228-229,231,235-255,261,265,268-269,273,291-375,403-415
+frontend/src/lib/components/CaptureSceneModal.svelte
+  h_e41d77f8309f5c 1-115
+frontend/src/lib/components/CreateGroupModal.svelte
+  h_e41d77f8309f5c 1-131
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 2,117
+frontend/src/lib/components/GroupCard.svelte
+  h_e41d77f8309f5c 1-187
+frontend/src/lib/components/SceneCard.svelte
+  h_e41d77f8309f5c 1-69
+frontend/src/lib/stores/groupStore.svelte.js
+  h_e41d77f8309f5c 1-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "04e6e4982699caff07945d5dfad7d9a91b03bf5b",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
