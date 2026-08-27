@@ -66,7 +66,7 @@ lint-backend:
 	@echo "==> Running Go static analysis (go vet)..."
 	cd backend && go vet ./src/...
 
-## lint-frontend: Run frontend formatting check, ESLint, and svelte-check
+## lint-frontend: Run frontend formatting check (Prettier), ESLint, and svelte-check
 lint-frontend:
 	@echo "==> Running frontend formatting check (Prettier), ESLint, and svelte-check..."
 	cd frontend && npm run format:check && npm run lint && npm run check

@@ -74,3 +74,26 @@ func TestDashboardManager_PanelsCRUD(t *testing.T) {
 		t.Errorf("Expected 0 panels after deletion, got %d", len(panels))
 	}
 }
+
+func TestDashboardManager_Reorder(t *testing.T) {
+	db := setupTestDB(t)
+	hub := NewHub()
+	dm := NewDashboardManager(db, hub)
+
+	dm.PinItem("dev-1", "device", true)
+	dm.PinItem("dev-2", "device", true)
+
+	if err := dm.ReorderItems([]string{"dev-2", "dev-1"}); err != nil {
+		t.Fatalf("ReorderItems failed: %v", err)
+	}
+
+	items := dm.GetItems()
+	for _, it := range items {
+		if it.ItemID == "dev-2" && it.Position != 0 {
+			t.Errorf("Expected dev-2 position 0, got %d", it.Position)
+		}
+		if it.ItemID == "dev-1" && it.Position != 1 {
+			t.Errorf("Expected dev-1 position 1, got %d", it.Position)
+		}
+	}
+}

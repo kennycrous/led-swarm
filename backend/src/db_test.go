@@ -25,7 +25,7 @@ func setupTestDB(t *testing.T) *Database {
 func TestDatabase_Devices(t *testing.T) {
 	db := setupTestDB(t)
 
-	// 1. Test SaveDevice & GetDevices
+	// 1. SaveDevice & GetDevices
 	dev := Device{
 		ID:         "wled-test-1",
 		Name:       "Test Strip 1",
@@ -50,7 +50,7 @@ func TestDatabase_Devices(t *testing.T) {
 		t.Errorf("Expected device name 'Test Strip 1', got '%s'", devices[0].Name)
 	}
 
-	// 2. Test UpdateDeviceName
+	// 2. UpdateDeviceName
 	if err := db.UpdateDeviceName("wled-test-1", "Renamed Strip"); err != nil {
 		t.Fatalf("UpdateDeviceName failed: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestDatabase_Devices(t *testing.T) {
 func TestDatabase_GroupsAndScenes(t *testing.T) {
 	db := setupTestDB(t)
 
-	// 1. Test SaveGroup & GetGroups
+	// 1. SaveGroup & GetGroups
 	group := Group{
 		ID:          "group-1",
 		Name:        "Desk Setup",
@@ -87,7 +87,7 @@ func TestDatabase_GroupsAndScenes(t *testing.T) {
 		t.Errorf("Expected 2 device IDs in group, got %d", len(groups[0].DeviceIDs))
 	}
 
-	// 2. Test SaveScene & GetScenes
+	// 2. SaveScene & GetScenes
 	scene := Scene{
 		ID:         "scene-1",
 		Name:       "Cyberpunk Neon",
@@ -107,7 +107,7 @@ func TestDatabase_GroupsAndScenes(t *testing.T) {
 		t.Fatalf("Expected 1 scene, got %d", len(scenes))
 	}
 
-	// 3. Test DeleteGroup & DeleteScene
+	// 3. DeleteGroup & DeleteScene
 	if err := db.DeleteGroup("group-1"); err != nil {
 		t.Fatalf("DeleteGroup failed: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestDatabase_GroupsAndScenes(t *testing.T) {
 func TestDatabase_DashboardItemsAndPanels(t *testing.T) {
 	db := setupTestDB(t)
 
-	// 1. Test SaveDashboardPanel & GetDashboardPanels
+	// 1. SaveDashboardPanel & GetDashboardPanels
 	panel := DashboardPanel{
 		ID:       "panel-living-room",
 		Title:    "Living Room Zone",
@@ -150,7 +150,7 @@ func TestDatabase_DashboardItemsAndPanels(t *testing.T) {
 		t.Errorf("Expected panel title 'Living Room Zone', got '%s'", panels[0].Title)
 	}
 
-	// 2. Test UPSERT behavior for UpdateDashboardItemPanel on a new device
+	// 2. UpdateDashboardItemPanel UPSERT
 	if err := db.UpdateDashboardItemPanel("wled-dev-1", "panel-living-room"); err != nil {
 		t.Fatalf("UpdateDashboardItemPanel failed: %v", err)
 	}
@@ -166,7 +166,7 @@ func TestDatabase_DashboardItemsAndPanels(t *testing.T) {
 		t.Errorf("Expected PanelID 'panel-living-room', got '%s'", items[0].PanelID)
 	}
 
-	// 3. Test UpdateDashboardItemSize UPSERT
+	// 3. UpdateDashboardItemSize UPSERT
 	if err := db.UpdateDashboardItemSize("wled-dev-1", "wide"); err != nil {
 		t.Fatalf("UpdateDashboardItemSize failed: %v", err)
 	}
@@ -176,7 +176,7 @@ func TestDatabase_DashboardItemsAndPanels(t *testing.T) {
 		t.Errorf("Expected Size 'wide', got '%s'", items[0].Size)
 	}
 
-	// 4. Test PinDashboardItem UPSERT
+	// 4. PinDashboardItem UPSERT
 	if err := db.PinDashboardItem("wled-dev-1", "device", false); err != nil {
 		t.Fatalf("PinDashboardItem failed: %v", err)
 	}
@@ -189,7 +189,7 @@ func TestDatabase_DashboardItemsAndPanels(t *testing.T) {
 		t.Errorf("Expected PanelID 'panel-living-room' preserved, got '%s'", items[0].PanelID)
 	}
 
-	// 5. Test DeleteDashboardPanel unassigns item panel IDs
+	// 5. DeleteDashboardPanel unassigns item panel IDs
 	if err := db.DeleteDashboardPanel("panel-living-room"); err != nil {
 		t.Fatalf("DeleteDashboardPanel failed: %v", err)
 	}

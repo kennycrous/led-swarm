@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getDashboardStore } from './dashboardStore.svelte.js';
+import { getDashboardStore } from '../../src/lib/stores/dashboardStore.svelte.js';
 
 describe('dashboardStore', () => {
   let store;
@@ -8,7 +8,7 @@ describe('dashboardStore', () => {
     store = getDashboardStore();
   });
 
-  it('should initialize with empty panels or default state', () => {
+  it('should initialize with empty panels and dashboard items arrays', () => {
     expect(Array.isArray(store.panels)).toBe(true);
     expect(Array.isArray(store.dashboardItems)).toBe(true);
   });

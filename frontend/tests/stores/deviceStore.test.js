@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getDeviceStore } from './deviceStore.svelte.js';
+import { getDeviceStore } from '../../src/lib/stores/deviceStore.svelte.js';
 
 describe('deviceStore', () => {
   it('should return initial store state arrays', () => {
