@@ -1,0 +1,34 @@
+backend/src/app_test.go
+  h_e41d77f8309f5c 1-130
+backend/src/device_manager_test.go
+  h_e41d77f8309f5c 4,8-36
+backend/src/group_manager_test.go
+  h_e41d77f8309f5c 4-5,10-12,18-23,27,40-49,63-75
+backend/src/wled_test.go
+  h_e41d77f8309f5c 5-7,11-128
+frontend/tests/components/CaptureSceneModal.test.js
+  h_e41d77f8309f5c 1-36
+frontend/tests/components/CreateGroupModal.test.js
+  h_e41d77f8309f5c 1-45
+frontend/tests/components/DeviceCard.test.js
+  h_e41d77f8309f5c 1-66
+frontend/tests/components/GroupCard.test.js
+  h_e41d77f8309f5c 1-51
+frontend/tests/components/ManualIpModal.test.js
+  h_e41d77f8309f5c 1-34
+frontend/tests/components/SceneCard.test.js
+  h_e41d77f8309f5c 1-37
+frontend/tests/components/StripsManagement.test.js
+  h_e41d77f8309f5c 1-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "18dc61c006d515b53f76222e43d34bc868fdddad",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
