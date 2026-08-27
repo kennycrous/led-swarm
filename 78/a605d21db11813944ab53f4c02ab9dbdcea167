@@ -1,0 +1,14 @@
+.plans/001-initialization.md
+  h_e41d77f8309f5c 1-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "78a605d21db11813944ab53f4c02ab9dbdcea167",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
