@@ -188,6 +188,18 @@ func (dm *DashboardManager) GetPanels() ([]DashboardPanel, error) {
 	return dm.db.GetDashboardPanels()
 }
 
+func (dm *DashboardManager) RenamePanel(id string, newTitle string) (*DashboardPanel, error) {
+	panel := DashboardPanel{
+		ID:    id,
+		Title: newTitle,
+	}
+	if err := dm.db.SaveDashboardPanel(panel); err != nil {
+		return nil, err
+	}
+	dm.broadcastUpdate("dashboard_panel_updated", panel)
+	return &panel, nil
+}
+
 func (dm *DashboardManager) DeletePanel(id string) error {
 	if err := dm.db.DeleteDashboardPanel(id); err != nil {
 		return err

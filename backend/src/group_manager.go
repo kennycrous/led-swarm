@@ -95,6 +95,25 @@ func (gm *GroupManager) SaveGroup(id string, name string, description string, de
 	return &g, nil
 }
 
+func (gm *GroupManager) RenameGroup(id string, newName string) (*Group, error) {
+	gm.mu.Lock()
+	g, ok := gm.groups[id]
+	if !ok {
+		gm.mu.Unlock()
+		return nil, fmt.Errorf("group not found: %s", id)
+	}
+	g.Name = newName
+	groupCopy := *g
+	gm.mu.Unlock()
+
+	if err := gm.db.SaveGroup(groupCopy); err != nil {
+		return nil, err
+	}
+
+	gm.broadcastUpdate("group_updated", groupCopy)
+	return &groupCopy, nil
+}
+
 func (gm *GroupManager) DeleteGroup(id string) error {
 	if err := gm.db.DeleteGroup(id); err != nil {
 		return err
@@ -155,47 +174,57 @@ func (gm *GroupManager) SetGroupState(groupID string, rawState json.RawMessage) 
 	return nil
 }
 
-// CaptureScene creates a multi-device state snapshot JSON and saves to SQLite
+// CaptureScene captures a multi-strip JSON state snapshot across all devices or scoped target
 func (gm *GroupManager) CaptureScene(name string, icon string) (*Scene, error) {
-	if icon == "" {
-		icon = "Sparkles"
-	}
+	return gm.CaptureScopedScene(name, icon, "global", "")
+}
 
-	allDevs := gm.devMgr.GetAllDevices()
-	snapshots := make([]SceneSnapshot, 0, len(allDevs))
+func (gm *GroupManager) CaptureScopedScene(name string, icon string, scopeType string, targetID string) (*Scene, error) {
+	devices := gm.devMgr.GetAllDevices()
 
-	for _, dev := range allDevs {
-		if !dev.IsOnline {
-			continue
-		}
-
-		rawState, err := gm.wledClient.FetchLiveState(dev.IPAddress)
-		if err == nil {
-			var parsed struct {
-				On         bool            `json:"on"`
-				Brightness int             `json:"bri"`
-				Transition int             `json:"transition,omitempty"`
-				MainSeg    int             `json:"mainseg"`
-				Segments   json.RawMessage `json:"seg,omitempty"`
+	if scopeType == "group" && targetID != "" {
+		gm.mu.RLock()
+		group, ok := gm.groups[targetID]
+		gm.mu.RUnlock()
+		if ok {
+			allowedMap := make(map[string]bool)
+			for _, id := range group.DeviceIDs {
+				allowedMap[id] = true
 			}
-			if unmarshalErr := json.Unmarshal(rawState, &parsed); unmarshalErr == nil {
-				if cleanBytes, marshalErr := json.Marshal(parsed); marshalErr == nil {
-					rawState = cleanBytes
+			filtered := make([]Device, 0)
+			for _, dev := range devices {
+				if allowedMap[dev.ID] {
+					filtered = append(filtered, dev)
 				}
 			}
-		} else {
-			stateBytes, err := json.Marshal(dev.State)
-			if err != nil {
-				continue
+			devices = filtered
+		}
+	}
+
+	var snapshots []SceneSnapshot
+	for _, dev := range devices {
+		var rawState json.RawMessage
+		if dev.IsOnline {
+			fetched, err := gm.wledClient.FetchLiveState(dev.IPAddress)
+			if err == nil && len(fetched) > 0 {
+				rawState = fetched
 			}
-			rawState = stateBytes
 		}
 
-		snapshots = append(snapshots, SceneSnapshot{
-			DeviceID:  dev.ID,
-			IPAddress: dev.IPAddress,
-			StateJSON: rawState,
-		})
+		if len(rawState) == 0 {
+			stateBytes, err := json.Marshal(dev.State)
+			if err == nil {
+				rawState = stateBytes
+			}
+		}
+
+		if len(rawState) > 0 {
+			snapshots = append(snapshots, SceneSnapshot{
+				DeviceID:  dev.ID,
+				IPAddress: dev.IPAddress,
+				StateJSON: rawState,
+			})
+		}
 	}
 
 	configBytes, err := json.Marshal(snapshots)
@@ -208,6 +237,8 @@ func (gm *GroupManager) CaptureScene(name string, icon string) (*Scene, error) {
 		ID:         sceneID,
 		Name:       name,
 		Icon:       icon,
+		ScopeType:  scopeType,
+		TargetID:   targetID,
 		ConfigJSON: string(configBytes),
 		CreatedAt:  time.Now().Format(time.RFC3339),
 	}

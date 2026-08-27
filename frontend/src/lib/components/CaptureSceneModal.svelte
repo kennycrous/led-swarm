@@ -1,10 +1,12 @@
 <script>
   import { X, Camera, Sparkles, Sun, Moon, Film, Flame, Zap } from 'lucide-svelte';
 
-  let { isOpen = false, onClose = () => {}, onCapture = () => {} } = $props();
+  let { isOpen = false, groups = [], onClose = () => {}, onCapture = () => {} } = $props();
 
   let nameInput = $state('');
   let selectedIcon = $state('Sparkles');
+  let scopeType = $state('global');
+  let targetId = $state('');
 
   const availableIcons = [
     { id: 'Sparkles', icon: Sparkles, label: 'Sparkles' },
@@ -18,9 +20,11 @@
   function handleSubmit(e) {
     e.preventDefault();
     if (nameInput.trim()) {
-      onCapture(nameInput.trim(), selectedIcon);
+      onCapture(nameInput.trim(), selectedIcon, scopeType, targetId);
       nameInput = '';
       selectedIcon = 'Sparkles';
+      scopeType = 'global';
+      targetId = '';
     }
   }
 </script>
@@ -52,8 +56,32 @@
             placeholder="e.g. Cyberpunk Neon, Movie Time, Relax"
             bind:value={nameInput}
             required
-            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/60 placeholder-slate-600"
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/60 placeholder-slate-600 mb-3"
           />
+
+          <label for="capture-scene-scope" class="block text-xs font-mono text-slate-400 mb-1"
+            >Scene Scope (Target)</label
+          >
+          <select
+            id="capture-scene-scope"
+            bind:value={scopeType}
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500/60 mb-2"
+          >
+            <option value="global">Global Swarm (All Rooms & Strips)</option>
+            <option value="group">Specific Group / Room Only</option>
+          </select>
+
+          {#if scopeType === 'group'}
+            <select
+              bind:value={targetId}
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-purple-300 focus:outline-none focus:border-purple-500/60"
+            >
+              <option value="">Select Target Group...</option>
+              {#each groups as g (g.id)}
+                <option value={g.id}>{g.name}</option>
+              {/each}
+            </select>
+          {/if}
         </div>
 
         <!-- Icon Picker Grid -->

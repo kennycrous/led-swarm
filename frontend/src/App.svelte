@@ -23,7 +23,8 @@
     Grid,
     Trash2,
     X,
-    PanelTop
+    PanelTop,
+    Edit3
   } from 'lucide-svelte';
   import { getDeviceStore } from '$lib/stores/deviceStore.svelte.js';
   import { getGroupStore } from '$lib/stores/groupStore.svelte.js';
@@ -33,21 +34,40 @@
   import GroupCard from '$lib/components/GroupCard.svelte';
   import SceneCard from '$lib/components/SceneCard.svelte';
   import CreateGroupModal from '$lib/components/CreateGroupModal.svelte';
+  import CreateRoomModal from '$lib/components/CreateRoomModal.svelte';
   import CaptureSceneModal from '$lib/components/CaptureSceneModal.svelte';
   import StripsManagement from '$lib/components/StripsManagement.svelte';
+  import CanvasEditor from '$lib/components/CanvasEditor.svelte';
+  import RoomCard from '$lib/components/RoomCard.svelte';
+  import { getCanvasStore } from '$lib/stores/canvasStore.svelte.js';
 
   const store = getDeviceStore();
   const groupStore = getGroupStore();
   const dashboardStore = getDashboardStore();
+  const canvasStore = getCanvasStore();
+
+  onMount(async () => {
+    try {
+      if (typeof store.init === 'function') await store.init();
+      if (typeof groupStore.init === 'function') await groupStore.init();
+      if (typeof dashboardStore.init === 'function') await dashboardStore.init();
+      if (typeof canvasStore.init === 'function') await canvasStore.init();
+    } catch (err) {
+      console.warn('[App] Error initializing stores on mount:', err);
+    }
+  });
 
   let activeTab = $state('dashboard');
   let masterPower = $state(true);
   let masterBrightness = $state(200);
   let isAddModalOpen = $state(false);
   let isCreateGroupModalOpen = $state(false);
+  let isCreateRoomModalOpen = $state(false);
   let isCaptureSceneModalOpen = $state(false);
   let isAddPanelModalOpen = $state(false);
   let newPanelTitle = $state('');
+  let editingPanelId = $state(null);
+  let editingPanelTitle = $state('');
 
   // Drag and Drop active target tracking
   let draggedItemId = $state(null);
@@ -65,6 +85,19 @@
           data: g,
           size: dashboardStore.getSize(g.id),
           panelId: dashboardStore.getPanelId(g.id)
+        });
+      }
+    });
+
+    // Add pinned 2D rooms
+    canvasStore.rooms.forEach((r) => {
+      if (dashboardStore.isPinned(r.id)) {
+        list.push({
+          id: r.id,
+          type: 'room',
+          data: r,
+          size: dashboardStore.getSize(r.id),
+          panelId: dashboardStore.getPanelId(r.id)
         });
       }
     });
@@ -227,17 +260,6 @@
         >
           <Sliders class="w-4 h-4" />
           <span>Strips & Devices</span>
-        </button>
-
-        <button
-          onclick={() => (activeTab = 'canvas')}
-          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-mono text-xs transition-all duration-200 cursor-pointer {activeTab ===
-          'canvas'
-            ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'}"
-        >
-          <Grid class="w-4 h-4" />
-          <span>2D Room Canvas</span>
         </button>
 
         <button
@@ -405,6 +427,7 @@
                         palettes={store.palettes}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onTogglePower={(id) => store.togglePower(id)}
                         onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
                         onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
@@ -422,6 +445,7 @@
                         palettes={store.palettes}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onTogglePower={(id, pwr) =>
                           groupStore.setGroupState(
                             id,
@@ -432,6 +456,7 @@
                           groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
                         onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
                         onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                        onRename={(id, name) => groupStore.renameGroup(id, name)}
                         onDelete={(id) => groupStore.deleteGroup(id)}
                         onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                         onToggleSize={(id) => cycleCardSize(id, item.size)}
@@ -441,10 +466,30 @@
                         scene={item.data}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onApply={(id) => groupStore.applyScene(id)}
                         onDelete={(id) => groupStore.deleteScene(id)}
                         onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                         onToggleSize={(id) => cycleCardSize(id, item.size)}
+                      />
+                    {:else if item.type === 'room'}
+                      <RoomCard
+                        room={item.data}
+                        devices={store.devices}
+                        placements={canvasStore.placements}
+                        effects={store.effects}
+                        palettes={store.palettes}
+                        isPinned={true}
+                        cardSize={item.size}
+                        showSizeToggle={true}
+                        onEditLayout={() => {
+                          canvasStore.selectRoom(item.data.id);
+                          activeTab = 'canvas';
+                        }}
+                        onRename={(id, title) => canvasStore.renameRoom(id, title)}
+                        onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
+                        onToggleSize={(id) => cycleCardSize(id, item.size)}
+                        onDelete={(id) => canvasStore.deleteRoom(id)}
                       />
                     {/if}
                   </div>
@@ -469,10 +514,49 @@
             >
               <!-- Panel Header -->
               <div class="flex items-center justify-between border-b border-slate-800/60 pb-3">
-                <h2 class="text-sm font-mono tracking-wider text-slate-200 flex items-center gap-2">
-                  <PanelTop class="w-4 h-4 text-purple-400" />
-                  {panel.title.toUpperCase()} ({panelCards.length})
-                </h2>
+                {#if editingPanelId === panel.id}
+                  <form
+                    onsubmit={(e) => {
+                      e.preventDefault();
+                      if (editingPanelTitle.trim()) {
+                        dashboardStore.renamePanel(panel.id, editingPanelTitle.trim());
+                      }
+                      editingPanelId = null;
+                    }}
+                    class="flex items-center gap-2"
+                  >
+                    <PanelTop class="w-4 h-4 text-purple-400" />
+                    <input
+                      type="text"
+                      bind:value={editingPanelTitle}
+                      onblur={() => {
+                        if (editingPanelTitle.trim()) {
+                          dashboardStore.renamePanel(panel.id, editingPanelTitle.trim());
+                        }
+                        editingPanelId = null;
+                      }}
+                      class="bg-[#06090e] border border-purple-500/50 rounded-lg px-2 py-0.5 text-xs font-mono font-bold text-slate-200 focus:outline-none focus:border-cyan-400 w-48"
+                    />
+                  </form>
+                {:else}
+                  <button
+                    type="button"
+                    onclick={() => {
+                      editingPanelId = panel.id;
+                      editingPanelTitle = panel.title;
+                    }}
+                    class="group/panelTitle flex items-center gap-2 cursor-pointer text-left border-0 bg-transparent p-0"
+                    title="Click to rename panel"
+                  >
+                    <h2 class="text-sm font-mono tracking-wider text-slate-200 flex items-center gap-2">
+                      <PanelTop class="w-4 h-4 text-purple-400" />
+                      {panel.title.toUpperCase()} ({panelCards.length})
+                    </h2>
+                    <Edit3
+                      class="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover/panelTitle:opacity-100 transition-opacity"
+                    />
+                  </button>
+                {/if}
                 <button
                   onclick={() => dashboardStore.deletePanel(panel.id)}
                   class="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
@@ -533,6 +617,7 @@
                             groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
                           onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
                           onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                          onRename={(id, name) => groupStore.renameGroup(id, name)}
                           onDelete={(id) => groupStore.deleteGroup(id)}
                           onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                           onToggleSize={(id) => cycleCardSize(id, item.size)}
@@ -546,6 +631,22 @@
                           onDelete={(id) => groupStore.deleteScene(id)}
                           onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                           onToggleSize={(id) => cycleCardSize(id, item.size)}
+                        />
+                      {:else if item.type === 'room'}
+                        <RoomCard
+                          room={item.data}
+                          devices={store.devices}
+                          placements={canvasStore.placements}
+                          isPinned={true}
+                          cardSize={item.size}
+                          onEditLayout={() => {
+                            canvasStore.selectRoom(item.data.id);
+                            activeTab = 'canvas';
+                          }}
+                          onRename={(id, title) => canvasStore.renameRoom(id, title)}
+                          onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
+                          onToggleSize={(id) => cycleCardSize(id, item.size)}
+                          onDelete={(id) => canvasStore.deleteRoom(id)}
                         />
                       {/if}
                     </div>
@@ -566,15 +667,38 @@
           onRename={(id, name) => store.renameDevice(id, name)}
         />
       {:else if activeTab === 'canvas'}
-        <!-- 2D ROOM VISUAL CANVAS PLACEHOLDER -->
-        <div class="glass-panel rounded-3xl p-12 text-center border border-dashed border-cyan-500/20 space-y-4">
-          <Grid class="w-12 h-12 text-cyan-400/40 mx-auto animate-pulse" />
-          <h3 class="text-lg font-bold font-mono text-slate-200">2D Room Canvas Workspace</h3>
-          <p class="text-xs font-mono text-slate-400 max-w-md mx-auto">
-            Visual 2D room canvas mapping for drag-and-drop spatial LED positioning, spatial light effects, and live
-            pixel mirroring.
-          </p>
-        </div>
+        <!-- 2D ROOM VISUAL CANVAS EDITOR -->
+        <CanvasEditor
+          devices={store.devices}
+          placements={canvasStore.placements}
+          rooms={canvasStore.rooms}
+          currentRoomId={canvasStore.currentRoomId}
+          onSelectRoom={(id) => canvasStore.selectRoom(id)}
+          onCreateRoom={(title) => canvasStore.createRoom(title)}
+          onRenameRoom={(id, title) => canvasStore.renameRoom(id, title)}
+          onDeleteRoom={(id) => canvasStore.deleteRoom(id)}
+          onBackToGroups={() => (activeTab = 'groups')}
+          onSavePlacements={() => canvasStore.savePlacements()}
+          onUpdatePlacement={(id, updates) => canvasStore.updatePlacement(id, updates)}
+          onTriggerSweep={() => {
+            if (store && store.onlineDevices) {
+              const originalEffects = store.onlineDevices.map((dev) => ({
+                id: dev.id,
+                fx: dev.state?.seg?.[0]?.fx ?? 0
+              }));
+
+              store.onlineDevices.forEach((dev) => {
+                store.setEffect(dev.id, 9);
+              });
+
+              setTimeout(() => {
+                originalEffects.forEach((item) => {
+                  store.setEffect(item.id, item.fx);
+                });
+              }, 3500);
+            }
+          }}
+        />
       {:else if activeTab === 'groups'}
         <!-- GROUPS & SCENES MANAGEMENT WORKSPACE -->
         <div class="space-y-6">
@@ -593,7 +717,7 @@
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-semibold transition-all cursor-pointer"
               >
                 <Camera class="w-4 h-4" />
-                <span>Capture Current Scene</span>
+                <span>Snapshot Scene</span>
               </button>
 
               <button
@@ -603,6 +727,43 @@
                 <Plus class="w-4 h-4" />
                 <span>Create Strip Group</span>
               </button>
+
+              <button
+                onclick={() => (isCreateRoomModalOpen = true)}
+                class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-mono text-xs font-semibold shadow-neonCyan transition-all cursor-pointer"
+              >
+                <LayoutGrid class="w-4 h-4" />
+                <span>Add 2D Room</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2D Room Canvases Grid Section -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <LayoutGrid class="w-3.5 h-3.5 text-cyan-400" />
+              2D Room Canvases ({canvasStore.rooms.length})
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {#each canvasStore.rooms as room (room.id)}
+                <RoomCard
+                  {room}
+                  devices={store.devices}
+                  placements={canvasStore.placements}
+                  effects={store.effects}
+                  palettes={store.palettes}
+                  isPinned={dashboardStore.isPinned(room.id)}
+                  cardSize={dashboardStore.getSize(room.id)}
+                  onEditLayout={() => {
+                    canvasStore.selectRoom(room.id);
+                    activeTab = 'canvas';
+                  }}
+                  onRename={(id, title) => canvasStore.renameRoom(id, title)}
+                  onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
+                  onToggleSize={(id) => cycleCardSize(id, dashboardStore.getSize(room.id))}
+                  onDelete={(id) => canvasStore.deleteRoom(id)}
+                />
+              {/each}
             </div>
           </div>
 
@@ -663,6 +824,7 @@
                     onSetColor={(id, r, g, b) => groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
                     onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
                     onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                    onRename={(id, name) => groupStore.renameGroup(id, name)}
                     onDelete={(id) => groupStore.deleteGroup(id)}
                     onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                     onToggleSize={(id) => cycleCardSize(id, dashboardStore.getSize(group.id))}
@@ -697,11 +859,22 @@
   }}
 />
 
+<CreateRoomModal
+  isOpen={isCreateRoomModalOpen}
+  availableDevices={store.devices}
+  onClose={() => (isCreateRoomModalOpen = false)}
+  onCreate={(title, desc, devIds) => {
+    canvasStore.createRoom(title, desc, devIds);
+    isCreateRoomModalOpen = false;
+  }}
+/>
+
 <CaptureSceneModal
   isOpen={isCaptureSceneModalOpen}
+  groups={groupStore.groups}
   onClose={() => (isCaptureSceneModalOpen = false)}
-  onCapture={(name, icon) => {
-    groupStore.captureScene(name, icon);
+  onCapture={(name, icon, scopeType, targetId) => {
+    groupStore.captureScene(name, icon, scopeType, targetId);
     isCaptureSceneModalOpen = false;
   }}
 />

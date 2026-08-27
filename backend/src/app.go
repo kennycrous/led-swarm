@@ -14,17 +14,19 @@ type App struct {
 	devMgr       *DeviceManager
 	groupMgr     *GroupManager
 	dashboardMgr *DashboardManager
+	canvasMgr    *CanvasManager
 	hub          *Hub
 	scanner      *MDNSScanner
 }
 
-func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, hub *Hub, scanner *MDNSScanner) *App {
+func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, hub *Hub, scanner *MDNSScanner) *App {
 	return &App{
 		db:           db,
 		wledClient:   wledClient,
 		devMgr:       devMgr,
 		groupMgr:     groupMgr,
 		dashboardMgr: dashboardMgr,
+		canvasMgr:    canvasMgr,
 		hub:          hub,
 		scanner:      scanner,
 	}
@@ -132,6 +134,10 @@ func (a *App) CaptureScene(name string, icon string) (*Scene, error) {
 	return a.groupMgr.CaptureScene(name, icon)
 }
 
+func (a *App) CaptureScopedScene(name string, icon string, scopeType string, targetID string) (*Scene, error) {
+	return a.groupMgr.CaptureScopedScene(name, icon, scopeType, targetID)
+}
+
 func (a *App) ApplyScene(id string) error {
 	return a.groupMgr.ApplyScene(id)
 }
@@ -162,10 +168,47 @@ func (a *App) GetDashboardPanels() ([]DashboardPanel, error) {
 	return a.dashboardMgr.GetPanels()
 }
 
+func (a *App) UpdateGroupName(id string, name string) error {
+	_, err := a.groupMgr.RenameGroup(id, name)
+	return err
+}
+
 func (a *App) AddDashboardPanel(title string) (*DashboardPanel, error) {
 	return a.dashboardMgr.AddPanel("", title)
 }
 
+func (a *App) RenameDashboardPanel(id string, title string) (*DashboardPanel, error) {
+	return a.dashboardMgr.RenamePanel(id, title)
+}
+
 func (a *App) DeleteDashboardPanel(id string) error {
 	return a.dashboardMgr.DeletePanel(id)
+}
+
+func (a *App) GetCanvasRooms() ([]CanvasRoom, error) {
+	return a.canvasMgr.GetRooms(), nil
+}
+
+func (a *App) CreateCanvasRoom(title string, description string, width int, height int, deviceIDs []string) (CanvasRoom, error) {
+	return a.canvasMgr.CreateRoom(title, description, width, height, deviceIDs)
+}
+
+func (a *App) UpdateRoomTitle(id string, title string) (*CanvasRoom, error) {
+	return a.canvasMgr.UpdateRoomTitle(id, title)
+}
+
+func (a *App) DeleteCanvasRoom(id string) error {
+	return a.canvasMgr.DeleteRoom(id)
+}
+
+func (a *App) GetCanvasPlacements(roomID string) ([]CanvasPlacement, error) {
+	return a.canvasMgr.GetPlacementsForRoom(roomID), nil
+}
+
+func (a *App) SaveCanvasPlacement(placement CanvasPlacement) error {
+	return a.canvasMgr.SavePlacement(placement)
+}
+
+func (a *App) BatchSaveCanvasPlacements(roomID string, placements []CanvasPlacement) error {
+	return a.canvasMgr.BatchSavePlacements(roomID, placements)
 }

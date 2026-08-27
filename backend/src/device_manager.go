@@ -68,7 +68,7 @@ func (dm *DeviceManager) loadStoredDevices() error {
 func (dm *DeviceManager) RegisterDevice(dev Device) {
 	dm.mu.Lock()
 	existing, ok := dm.devices[dev.ID]
-	if ok && existing.Name != "" && dev.Name == "" {
+	if ok && existing.Name != "" {
 		dev.Name = existing.Name
 	}
 	dm.devices[dev.ID] = &dev

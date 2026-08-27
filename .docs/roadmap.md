@@ -156,19 +156,22 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟡 Slice 006: 2D Visual Layout Canvas Editor
-- **Objective**: Create an interactive 2D visual workspace where users drag and position WLED light strips according to their real-world physical room layout.
+### 🟡 Slice 006: Multi-Room 2D Layout Canvas Editor & Scoped Scenes
+- **Objective**: Create an interactive 2D visual workspace where users drag and position WLED light strips according to physical room layouts, pin 2D Room Canvases to the Dashboard, and capture room-scoped scenes that don't override untargeted rooms.
 - **Backend Deliverables**:
-  - API endpoints and SQLite persistence for `canvas_placements` (pos_x, pos_y, rotation, scale, length, geometry_type).
-  - Spatial coordinate mapping engine for multi-strip 2D sweep effects.
+  - [x] Database table `canvas_placements` (pos_x, pos_y, rotation, scale, geometry) & `CanvasManager` WebSocket engine.
+  - [ ] Database table `canvas_rooms` (`id`, `title`, `width`, `height`) for multi-room canvas preset management.
+  - [ ] Scoped Scenes schema (`scope_type`: 'global' | 'room' | 'group', `target_id`): Captures & restores state ONLY for assigned strips.
+  - [ ] Dashboard item support for `'room'` item type (`/api/v1/dashboard/pin`).
 - **Frontend Deliverables**:
-  - Interactive HTML5 Canvas / WebGL 2D editor grid.
-  - Drag-and-drop strip placement, rotation handles, length adjustment, and strip vs matrix geometry selection.
-  - Live LED pixel mirroring preview (canvas pixels mirror physical WLED color output).
-  - Spatial sweep animation trigger (rainbow wave sweeping across 2D canvas coordinates).
+  - [x] Interactive 2D room map grid editor in Svelte 5 (`CanvasEditor.svelte`) with live pixel mirroring & spatial sweep animation.
+  - [ ] Multi-Room Canvas Selector (create, switch, rename, delete 2D Room Canvases).
+  - [ ] Pinnable 2D Room Canvas Cards on Dashboard grid displaying mini live 2D pixel preview & "Edit Layout" button.
+  - [ ] Group Creation Modal supporting Group Types (Standard Group, 2D Spatial Room, Scoped Scene).
+  - [ ] Scoped Scene capture modal allowing room-specific snapshot creation.
 - **Acceptance Criteria**:
-  - User can drag strips onto 2D canvas, save positions, and reload page with layout preserved.
-  - Canvas pixels reflect real-time live LED colors of physical strips.
+  - User can create multiple 2D Room Canvases, pin a Room Canvas to the Dashboard, and open its 2D layout editor directly.
+  - Applying a Scoped Scene updates the assigned Room or Group without touching unassigned rooms.
 
 ---
 

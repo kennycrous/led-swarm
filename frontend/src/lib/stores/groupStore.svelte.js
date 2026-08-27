@@ -54,6 +54,26 @@ export function getGroupStore() {
       }
     },
 
+    async renameGroup(groupId, newName) {
+      if (!newName || !newName.trim()) return;
+      try {
+        const cleanName = newName.trim();
+        groups = groups.map((g) => (g.id === groupId ? { ...g, name: cleanName } : g));
+
+        if (isWails && window.go?.main?.App?.UpdateGroupName) {
+          await window.go.main.App.UpdateGroupName(groupId, cleanName);
+        } else {
+          await fetch('/api/v1/groups/name', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: groupId, name: cleanName })
+          });
+        }
+      } catch (e) {
+        console.error('Failed to rename group:', e);
+      }
+    },
+
     async deleteGroup(id) {
       try {
         if (isWails && window.go?.main?.App?.DeleteGroup) {
@@ -86,16 +106,18 @@ export function getGroupStore() {
       }
     },
 
-    async captureScene(name, icon) {
+    async captureScene(name, icon, scopeType = 'global', targetId = '') {
       try {
         let s = null;
-        if (isWails && window.go?.main?.App?.CaptureScene) {
+        if (isWails && window.go?.main?.App?.CaptureScopedScene) {
+          s = await window.go.main.App.CaptureScopedScene(name, icon, scopeType, targetId);
+        } else if (isWails && window.go?.main?.App?.CaptureScene) {
           s = await window.go.main.App.CaptureScene(name, icon);
         } else {
           const res = await fetch('/api/v1/scenes/capture', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, icon })
+            body: JSON.stringify({ name, icon, scopeType, targetId })
           });
           if (res.ok) {
             s = await res.json();

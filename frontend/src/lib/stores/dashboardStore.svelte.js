@@ -157,6 +157,26 @@ export function getDashboardStore() {
       }
     },
 
+    async renamePanel(panelId, newTitle) {
+      if (!newTitle || !newTitle.trim()) return;
+      try {
+        const cleanTitle = newTitle.trim();
+        panels = panels.map((p) => (p.id === panelId ? { ...p, title: cleanTitle } : p));
+
+        if (isWails && window.go?.main?.App?.RenameDashboardPanel) {
+          await window.go.main.App.RenameDashboardPanel(panelId, cleanTitle);
+        } else {
+          await fetch('/api/v1/dashboard/panels/rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: panelId, title: cleanTitle })
+          });
+        }
+      } catch (e) {
+        console.error('Error renaming panel:', e);
+      }
+    },
+
     async deletePanel(panelId) {
       panels = panels.filter((p) => p.id !== panelId);
 
