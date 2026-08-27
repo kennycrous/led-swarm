@@ -1,0 +1,50 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 141,144-146,148-149,151-152,154-155
+.github/workflows/ci.yml
+  h_e41d77f8309f5c 1-40
+Makefile
+  h_e41d77f8309f5c 1,49,51-52,54,57-69,86-87
+backend/src/dashboard_manager_test.go
+  h_e41d77f8309f5c 1-76
+backend/src/db_test.go
+  h_e41d77f8309f5c 1-206
+backend/src/server_test.go
+  h_e41d77f8309f5c 1-122
+frontend/eslint.config.js
+  h_e41d77f8309f5c 1-14
+frontend/package-lock.json
+  h_e41d77f8309f5c 17-18,20-22,25,27-29,32-38,52-272,664-854,958-971,980-983,985-988,997-1000,1002-1277,1637-1643,1653-1662,1703-1707,1709-1717,1720,1723-1726,1728-1731,1733-1736,1738,1740-1745,1748-2026,2045-2054,2101-2110,2124-2133,2147-2159,2238-2247,2305-2347,2361-2389,2408-2421,2432-2451,2472-2478,2486-2499,2509-2515,2565-2752,2759-2789,2807-2866,2897-2910,2921-2933,2947-2984,3037-3049,3063-3105,3168-3174,3184-3190,3201-3204,3206,3208-3211,3214-3236,3238,3240-3246,3249-3252,3256-3267,3270-3635,3646-3655,3665-3671,3696-3731,3770-3776,3817-3913,3921-3927,4100-4153,4175-4209,4231-4237,4258-4281,4315-4348,4419-4487,4498-4524,4588-4760,4825-4844,4846,4897-4926,4940-4965,4973-5009,5041-5050,5138-5466
+frontend/package.json
+  h_e41d77f8309f5c 9-12,16-17,19-21,24,26-28
+frontend/src/App.svelte
+  h_e41d77f8309f5c 564,594
+frontend/src/lib/components/CaptureSceneModal.svelte
+  h_e41d77f8309f5c 68
+frontend/src/lib/components/CreateGroupModal.svelte
+  h_e41d77f8309f5c 82
+frontend/src/lib/components/CyberSelect.svelte
+  h_e41d77f8309f5c 58
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 26,28-29,81,147
+frontend/src/lib/components/GroupCard.svelte
+  h_e41d77f8309f5c 137,150
+frontend/src/lib/stores/dashboardStore.test.js
+  h_e41d77f8309f5c 1-52
+frontend/src/lib/stores/deviceStore.test.js
+  h_e41d77f8309f5c 1-14
+frontend/svelte.config.js
+  h_e41d77f8309f5c 1-5
+frontend/vite.config.js
+  h_e41d77f8309f5c 12-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "84c8e0e6559ef559729891dc45b4ba7471a09184",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
