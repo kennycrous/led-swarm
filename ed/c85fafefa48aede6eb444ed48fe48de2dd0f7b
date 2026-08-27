@@ -1,0 +1,67 @@
+frontend/postcss.config.js
+  h_e41d77f8309f5c 1-6
+frontend/package-lock.json
+  h_e41d77f8309f5c 1-2420
+  h_e41d77f8309f5c 2421-2424
+frontend/src/App.svelte
+  h_e41d77f8309f5c 1-287
+.gitignore
+  h_e41d77f8309f5c 1-15
+  h_e41d77f8309f5c 16-61
+backend/go.sum
+  h_e41d77f8309f5c 1-133
+frontend/vite.config.js
+  h_e41d77f8309f5c 1-16
+frontend/src/main.js
+  h_e41d77f8309f5c 1-9
+frontend/src/app.css
+  h_e41d77f8309f5c 1-44
+frontend/tailwind.config.js
+  h_e41d77f8309f5c 1-29
+Dockerfile
+  h_e41d77f8309f5c 1-26
+frontend/index.html
+  h_e41d77f8309f5c 1-13
+frontend/package.json
+  h_e41d77f8309f5c 1-24
+backend/go.mod
+  h_e41d77f8309f5c 1-48
+wails.json
+  h_e41d77f8309f5c 1-4,6-21
+  h_e41d77f8309f5c 5
+Makefile
+  h_e41d77f8309f5c 1-74
+README.md
+  h_e41d77f8309f5c 1-96
+backend/.air.toml
+  h_e41d77f8309f5c 1-24
+backend/.gitignore
+  h_e41d77f8309f5c 1-10
+backend/src/app.go
+  h_e41d77f8309f5c 1-55
+backend/src/db.go
+  h_e41d77f8309f5c 1-142
+backend/src/hub.go
+  h_e41d77f8309f5c 1-127
+backend/src/main.go
+  h_e41d77f8309f5c 1-76
+backend/src/mdns.go
+  h_e41d77f8309f5c 1-112
+backend/src/server.go
+  h_e41d77f8309f5c 1-84
+backend/src/wled.go
+  h_e41d77f8309f5c 1-140
+frontend/.gitignore
+  h_e41d77f8309f5c 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "edc85fafefa48aede6eb444ed48fe48de2dd0f7b",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
