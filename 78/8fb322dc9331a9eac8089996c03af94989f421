@@ -1,0 +1,16 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 35-42,49,56,63,121-141,157,170,182
+.plans/004-customizable-dashboard.md
+  h_e41d77f8309f5c 1-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "788fb322dc9331a9eac8089996c03af94989f421",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
