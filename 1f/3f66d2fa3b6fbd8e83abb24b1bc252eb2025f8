@@ -1,0 +1,14 @@
+.plans/003-strip-grouping-scenes.md
+  h_e41d77f8309f5c 95-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1f3f66d2fa3b6fbd8e83abb24b1bc252eb2025f8",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
