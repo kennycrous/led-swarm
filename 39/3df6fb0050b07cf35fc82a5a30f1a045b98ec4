@@ -1,0 +1,14 @@
+AGENTS.md
+  h_e41d77f8309f5c 80-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "393df6fb0050b07cf35fc82a5a30f1a045b98ec4",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
