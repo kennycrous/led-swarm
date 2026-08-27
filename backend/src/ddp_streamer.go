@@ -331,7 +331,7 @@ func resolveTargetConfig(
 	case "room":
 		if canvasMgr != nil {
 			placements := canvasMgr.GetPlacementsForRoom(target.TargetID)
-			for ipIdx, p := range placements {
+			for _, p := range placements {
 				if devMgr != nil {
 					dev := devMgr.GetDeviceByID(p.DeviceID)
 					if dev != nil && dev.IPAddress != "" && dev.IsOnline {
@@ -340,6 +340,8 @@ func resolveTargetConfig(
 						if devLEDs <= 0 {
 							devLEDs = 60
 						}
+						currentIPIndex := len(ips) - 1
+
 						// Calculate (x, y) coordinates for each LED on 2D grid
 						rad := p.Rotation * math.Pi / 180.0
 						dirX := math.Cos(rad)
@@ -350,7 +352,7 @@ func resolveTargetConfig(
 							px := p.PosX + float64(i)*spacing*dirX
 							py := p.PosY + float64(i)*spacing*dirY
 							pixels = append(pixels, LEDPixel2D{
-								IPIndex:  ipIdx,
+								IPIndex:  currentIPIndex,
 								LEDIndex: i,
 								X:        px,
 								Y:        py,
@@ -390,7 +392,18 @@ func Generate2DSpatialEffectFrame(
 		buffers[i] = make([]byte, maxIndexPerIP[i]*3)
 	}
 
-	centerX, centerY := 1000.0, 600.0
+	// Calculate center of mass of 2D room canvas
+	var sumX, sumY float64
+	if len(pixels) > 0 {
+		for _, p := range pixels {
+			sumX += p.X
+			sumY += p.Y
+		}
+		sumX /= float64(len(pixels))
+		sumY /= float64(len(pixels))
+	} else {
+		sumX, sumY = 1000.0, 600.0
+	}
 
 	for _, p := range pixels {
 		if p.IPIndex >= ipCount {
@@ -406,24 +419,58 @@ func Generate2DSpatialEffectFrame(
 
 		switch effect {
 		case "spatial_sweep":
-			sweepPos := math.Mod(t*400.0, 2000.0)
+			sweepPos := math.Mod(t*500.0, 2200.0)
 			dist := math.Abs(p.X - sweepPos)
-			if dist < 120.0 {
-				v := uint8(255 * intensity * (1.0 - dist/120.0))
+			if dist < 150.0 {
+				v := uint8(255.0 * intensity * (1.0 - dist/150.0))
 				r = uint8(float64(v) * 0.2)
 				g = v
-				b = v
+				b = uint8(float64(v) * 0.9)
 			} else {
-				g = uint8(10 * intensity)
+				g = uint8(10.0 * intensity)
+				b = uint8(20.0 * intensity)
 			}
+
+		case "rainbow_wave":
+			pos := (p.X*0.6 + p.Y*0.4) / 2000.0
+			hue := math.Mod(pos+t*0.2, 1.0)
+			r, g, b = hsvToRGB(hue, 1.0, intensity)
+
+		case "digital_rain":
+			pos := (p.Y/1200.0)*6.0 + (p.X/2000.0)*0.5
+			wave := math.Sin(pos*math.Pi - t*4.0)
+			if wave > 0.4 {
+				v := uint8(255.0 * intensity * ((wave - 0.4) / 0.6))
+				r = v / 4
+				g = v
+				b = v / 2
+			} else {
+				g = uint8(15.0 * intensity)
+			}
+
+		case "pulse_beads":
+			pos := (p.X*0.7 + p.Y*0.3) / 2000.0
+			b1 := math.Max(0.0, 1.0-math.Abs(pos-math.Mod(t*0.8, 1.0))*6.0)
+			b2 := math.Max(0.0, 1.0-math.Abs(pos-(1.0-math.Mod(t*0.5, 1.0)))*6.0)
+			r = uint8(255.0 * intensity * math.Min(1.0, b1))
+			b = uint8(255.0 * intensity * math.Min(1.0, b2))
+			g = uint8(120.0 * intensity * math.Min(1.0, b1+b2))
+
+		case "cyber_fire":
+			pos := (p.X*0.5 + p.Y*0.5) / 2000.0
+			n := math.Sin(pos*8.0+t*4.0)*0.5 + math.Cos(pos*12.0-t*6.0)*0.5
+			val := math.Max(0.0, math.Min(1.0, (n+1.0)/2.0))
+			r = uint8(255.0 * val * intensity)
+			g = uint8(70.0 * (1.0 - val) * intensity)
+			b = uint8(180.0 * math.Sin(val*math.Pi) * intensity)
 
 		case "spatial_ripple":
 			fallthrough
 		default:
-			dist := math.Sqrt((p.X-centerX)*(p.X-centerX) + (p.Y-centerY)*(p.Y-centerY))
-			wave := math.Sin(dist*0.01 - t*3.0)
+			dist := math.Sqrt((p.X-sumX)*(p.X-sumX) + (p.Y-sumY)*(p.Y-sumY))
+			wave := math.Sin(dist*0.012 - t*4.0)
 			if wave > 0 {
-				hue := math.Mod(dist*0.001+t*0.1, 1.0)
+				hue := math.Mod(dist*0.0008+t*0.15, 1.0)
 				r, g, b = hsvToRGB(hue, 1.0, wave*intensity)
 			}
 		}
