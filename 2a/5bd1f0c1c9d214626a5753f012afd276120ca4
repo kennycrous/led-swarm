@@ -1,0 +1,16 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 1-163
+AGENTS.md
+  h_e41d77f8309f5c 41-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2a5bd1f0c1c9d214626a5753f012afd276120ca4",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
