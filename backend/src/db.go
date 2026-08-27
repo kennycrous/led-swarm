@@ -185,7 +185,7 @@ func (d *Database) SaveDevice(dev Device) error {
 	INSERT INTO devices (id, name, ip_address, mac_address, led_count, is_online, last_seen)
 	VALUES (?, ?, ?, ?, ?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
-		name = CASE WHEN excluded.name != '' THEN excluded.name ELSE devices.name END,
+		name = CASE WHEN devices.name IS NOT NULL AND devices.name != '' THEN devices.name ELSE excluded.name END,
 		ip_address = excluded.ip_address,
 		mac_address = excluded.mac_address,
 		led_count = excluded.led_count,

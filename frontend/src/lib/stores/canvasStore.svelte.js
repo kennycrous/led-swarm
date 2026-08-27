@@ -18,7 +18,10 @@ class CanvasStore {
 
   async init() {
     await this.fetchRooms();
-    await this.fetchPlacements(this.currentRoomId);
+    if (this.rooms.length > 0) {
+      this.currentRoomId = this.rooms[0].id;
+    }
+    await this.fetchPlacements();
   }
 
   async fetchRooms() {
@@ -93,16 +96,17 @@ class CanvasStore {
     await this.fetchPlacements(roomId);
   }
 
-  async fetchPlacements(roomId = this.currentRoomId) {
+  async fetchPlacements(roomId = '') {
     try {
       const wailsApp = getWailsApp();
       if (wailsApp && typeof wailsApp.GetCanvasPlacements === 'function') {
-        const data = await wailsApp.GetCanvasPlacements(roomId);
+        const data = await wailsApp.GetCanvasPlacements(roomId || '');
         if (data) this.placements = data;
         return;
       }
 
-      const res = await fetch(`/api/v1/canvas/placements?roomId=${roomId}`);
+      const url = roomId ? `/api/v1/canvas/placements?roomId=${roomId}` : '/api/v1/canvas/placements';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {

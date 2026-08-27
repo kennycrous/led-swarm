@@ -312,7 +312,7 @@
   >
     <!-- Background Canvas Info Watermark -->
     <div class="absolute top-4 left-4 pointer-events-none opacity-40 font-mono text-xs text-cyan-500/60 space-y-1">
-      <p>ROOM CANVAS GRID (2000x1200 px)</p>
+      <p>ROOM CANVAS GRID (1200x700 px)</p>
       <p>ACTIVE STRIPS: {roomDevices.length}</p>
     </div>
 

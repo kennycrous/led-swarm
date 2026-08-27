@@ -131,11 +131,14 @@ func (cm *CanvasManager) GetPlacementsForRoom(roomID string) []CanvasPlacement {
 	cm.mu.RLock()
 	defer cm.mu.RUnlock()
 
-	if roomID == "" {
-		roomID = "default"
+	res := make([]CanvasPlacement, 0)
+	if roomID == "" || roomID == "all" || roomID == "*" {
+		for _, p := range cm.placements {
+			res = append(res, p)
+		}
+		return res
 	}
 
-	res := make([]CanvasPlacement, 0)
 	for _, p := range cm.placements {
 		if p.RoomID == roomID || (roomID == "default" && (p.RoomID == "" || p.RoomID == "default")) {
 			res = append(res, p)

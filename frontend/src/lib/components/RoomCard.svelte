@@ -38,6 +38,55 @@
     placements.filter((p) => p.roomId === room.id || (room.id === 'default' && (!p.roomId || p.roomId === 'default')))
   );
 
+  // Compute auto-centered & scaled preview coordinates for room placements
+  let previewPlacements = $derived.by(() => {
+    if (roomPlacements.length === 0) return [];
+
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
+
+    roomPlacements.forEach((p) => {
+      if (p.posX < minX) minX = p.posX;
+      if (p.posX > maxX) maxX = p.posX;
+      if (p.posY < minY) minY = p.posY;
+      if (p.posY > maxY) maxY = p.posY;
+    });
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const spanX = maxX - minX;
+    const spanY = maxY - minY;
+
+    const rangeX = Math.max(spanX * 1.6, 600);
+    const rangeY = Math.max(spanY * 1.6, 360);
+
+    return roomPlacements.map((p) => {
+      const dev = devices.find((d) => d.id === p.deviceId);
+      const relX = 50 + ((p.posX - centerX) / rangeX) * 100;
+      const relY = 50 + ((p.posY - centerY) / rangeY) * 100;
+      const posX = Math.max(12, Math.min(88, relX));
+      const posY = Math.max(15, Math.min(85, relY));
+
+      const rot = p.rotation || 0;
+      const isOn = dev?.state?.on ?? false;
+      const color = dev?.state?.seg?.[0]?.col?.[0]
+        ? `rgb(${dev.state.seg[0].col[0][0]}, ${dev.state.seg[0].col[0][1]}, ${dev.state.seg[0].col[0][2]})`
+        : '#06b6d4';
+
+      return {
+        ...p,
+        dev,
+        posX,
+        posY,
+        rot,
+        isOn,
+        color
+      };
+    });
+  });
+
   // Devices in this room
   let roomDevices = $derived(devices.filter((dev) => roomPlacements.some((p) => p.deviceId === dev.id)));
   let onlineCount = $derived(roomDevices.filter((d) => d.isOnline).length);
@@ -236,24 +285,17 @@
     ></div>
 
     <!-- Mini Placements Preview -->
-    {#each roomPlacements as p (p.deviceId)}
-      {@const dev = devices.find((d) => d.id === p.deviceId)}
-      {@const posX = (p.posX / 2000) * 100}
-      {@const posY = (p.posY / 1200) * 100}
-      {@const rot = p.rotation || 0}
-      {@const isOn = dev?.state?.on ?? false}
-      {@const color = dev?.state?.seg?.[0]?.col?.[0]
-        ? `rgb(${dev.state.seg[0].col[0][0]}, ${dev.state.seg[0].col[0][1]}, ${dev.state.seg[0].col[0][2]})`
-        : '#06b6d4'}
-
+    {#each previewPlacements as p (p.deviceId)}
       <div
-        class="absolute flex items-center justify-center rounded-full transition-transform duration-300"
-        style="left: {posX}%; top: {posY}%; transform: translate(-50%, -50%) rotate({rot}deg);"
+        class="absolute flex items-center justify-center rounded-full transition-all duration-300"
+        style="left: {p.posX}%; top: {p.posY}%; transform: translate(-50%, -50%) rotate({p.rot}deg);"
       >
         <!-- Strip Line Indicator -->
         <div
-          class="h-2 w-12 rounded-full border border-cyan-400/40 shadow-sm"
-          style="background-color: {isOn ? color : '#334155'}; box-shadow: {isOn ? `0 0 8px ${color}` : 'none'};"
+          class="h-2 w-10 rounded-full border border-cyan-400/40 shadow-sm"
+          style="background-color: {p.isOn ? p.color : '#334155'}; box-shadow: {p.isOn
+            ? `0 0 8px ${p.color}`
+            : 'none'};"
         ></div>
       </div>
     {/each}
