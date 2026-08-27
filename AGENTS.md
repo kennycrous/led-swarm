@@ -38,7 +38,8 @@ Welcome to **LED Swarm Orchestrator** (`led-swarm`). This document provides AI c
 ```
 led-swarm/
 ├── .docs/
-│   └── architecture.md       # Complete architectural & system design specification
+│   ├── architecture.md       # Complete architectural & system design specification
+│   └── roadmap.md            # Incremental horizontal feature roadmap specification
 ├── .plans/                   # Step-by-step implementation plans & phase specifications
 ├── AGENTS.md                  # AI agent context & guidelines (this file)
 └── README.md                  # Project intro
