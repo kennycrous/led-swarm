@@ -243,6 +243,16 @@ func (dm *DeviceManager) GetAllDevices() []Device {
 	return result
 }
 
+func (dm *DeviceManager) GetDeviceByID(id string) *Device {
+	dm.mu.RLock()
+	defer dm.mu.RUnlock()
+	if dev, ok := dm.devices[id]; ok {
+		devCopy := *dev
+		return &devCopy
+	}
+	return nil
+}
+
 func (dm *DeviceManager) UpdateDeviceName(id string, newName string) error {
 	dm.mu.Lock()
 	if dev, ok := dm.devices[id]; ok {

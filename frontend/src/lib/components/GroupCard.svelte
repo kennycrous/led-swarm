@@ -10,7 +10,8 @@
     Pin,
     Maximize2,
     MoreVertical,
-    Edit3
+    Edit3,
+    Zap
   } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
@@ -22,6 +23,7 @@
     isPinned = true,
     cardSize = 'normal',
     showSizeToggle = false,
+    ddpStore,
     onTogglePower = () => {},
     onSetBrightness = () => {},
     onSetColor = () => {},
@@ -38,6 +40,16 @@
   let selectedColor = $state('#06b6d4');
   let selectedEffect = $state(0);
   let selectedPalette = $state(0);
+
+  let isDDPActive = $derived(ddpStore?.isStreaming('group', group.id) || false);
+  let ddpStatus = $derived(ddpStore?.getStreamStatus('group', group.id) || {});
+
+  const ddpEffects = [
+    { id: 'rainbow_wave', name: '⚡ DDP: Rainbow Wave' },
+    { id: 'digital_rain', name: '⚡ DDP: Matrix Rain' },
+    { id: 'pulse_beads', name: '⚡ DDP: Neon Pulse' },
+    { id: 'cyber_fire', name: '⚡ DDP: Cyber Flame' }
+  ];
   let isMenuOpen = $state(false);
   let isEditingName = $state(false);
   let editedName = $state('');
@@ -118,15 +130,32 @@
       </div>
     </div>
 
-    <!-- Power, Delete & Card Options Menu -->
+    <!-- Power, DDP 60 & Card Options Menu -->
     <div class="flex items-center gap-1.5 relative">
+      <button
+        onclick={() => {
+          if (isDDPActive) {
+            ddpStore?.stopStream('group', group.id);
+          } else {
+            ddpStore?.startStream('group', group.id, 'rainbow_wave', 1.0, 1.0);
+          }
+        }}
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-mono text-[11px] font-bold transition-all duration-200 cursor-pointer {isDDPActive
+          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 glow-amber'
+          : 'bg-[#090e17]/80 text-slate-400 hover:text-amber-400 border border-slate-800'}"
+        title="Toggle DDP 60 FPS Realtime Stream for Group"
+      >
+        <Zap class="w-3.5 h-3.5 {isDDPActive ? 'animate-pulse text-amber-400' : ''}" />
+        <span>{isDDPActive ? `${ddpStatus.fps || 60} FPS` : 'DDP 60'}</span>
+      </button>
+
       <button
         onclick={() => {
           groupPower = !groupPower;
           onTogglePower(group.id, groupPower);
         }}
         class="p-2.5 rounded-xl transition-all duration-200 {groupPower
-          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan'
+          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 glow-purple'
           : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
         title="Toggle Group Power"
       >
@@ -255,36 +284,65 @@
     </div>
 
     <!-- Custom Glassmorphic CyberSelect Dropdowns -->
-    <div class="grid grid-cols-2 gap-2">
-      <!-- FX CyberSelect -->
-      <CyberSelect
-        value={selectedEffect}
-        options={effects}
-        icon={Sparkles}
-        iconColor="text-cyan-400"
-        hoverBorder="hover:border-cyan-500/40"
-        onChange={(fxId) => {
-          selectedEffect = fxId;
-          onSetEffect(group.id, fxId);
-        }}
-      />
+    {#if isDDPActive}
+      <div class="space-y-2 bg-amber-500/10 p-2.5 rounded-2xl border border-amber-500/30">
+        <div class="flex items-center justify-between text-[11px] font-mono text-amber-400 font-bold">
+          <span class="flex items-center gap-1">
+            <Zap class="w-3 h-3 text-amber-400 animate-pulse" />
+            Group DDP 60 FPS Swarm Array
+          </span>
+          <span>{ddpStatus.fps || 60} FPS</span>
+        </div>
+        <select
+          value={ddpStatus.effect || 'rainbow_wave'}
+          onchange={(e) => {
+            ddpStore?.startStream(
+              'group',
+              group.id,
+              e.target.value,
+              ddpStatus.speed || 1.0,
+              ddpStatus.intensity || 1.0
+            );
+          }}
+          class="w-full bg-[#06090e] border border-amber-500/40 rounded-xl px-2.5 py-1 text-xs font-mono text-amber-300 focus:outline-none"
+        >
+          {#each ddpEffects as eff (eff.id)}
+            <option value={eff.id}>{eff.name}</option>
+          {/each}
+        </select>
+      </div>
+    {:else}
+      <div class="grid grid-cols-2 gap-2">
+        <!-- FX CyberSelect -->
+        <CyberSelect
+          value={selectedEffect}
+          options={effects}
+          icon={Sparkles}
+          iconColor="text-cyan-400"
+          hoverBorder="hover:border-cyan-500/40"
+          onChange={(fxId) => {
+            selectedEffect = fxId;
+            onSetEffect(group.id, fxId);
+          }}
+        />
 
-      <!-- Palette CyberSelect -->
-      <CyberSelect
-        value={selectedPalette}
-        options={palettes}
-        icon={Palette}
-        iconColor="text-purple-400"
-        hoverBorder="hover:border-purple-500/40"
-        onChange={(palId) => {
-          selectedPalette = palId;
-          onSetPalette(group.id, palId);
-          if (selectedEffect === 0) {
-            selectedEffect = 2; // Breathe
-            onSetEffect(group.id, 2);
-          }
-        }}
-      />
-    </div>
+        <!-- Palette CyberSelect -->
+        <CyberSelect
+          value={selectedPalette}
+          options={palettes}
+          icon={Palette}
+          iconColor="text-purple-400"
+          hoverBorder="hover:border-purple-500/40"
+          onChange={(palId) => {
+            selectedPalette = palId;
+            onSetPalette(group.id, palId);
+            if (selectedEffect === 0) {
+              selectedEffect = 2; // Breathe
+              onSetEffect(group.id, 2);
+            }
+          }}
+        />
+      </div>
+    {/if}
   </div>
 </div>

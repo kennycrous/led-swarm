@@ -40,11 +40,13 @@
   import CanvasEditor from '$lib/components/CanvasEditor.svelte';
   import RoomCard from '$lib/components/RoomCard.svelte';
   import { getCanvasStore } from '$lib/stores/canvasStore.svelte.js';
+  import { getDDPStore } from '$lib/stores/ddpStore.svelte.js';
 
   const store = getDeviceStore();
   const groupStore = getGroupStore();
   const dashboardStore = getDashboardStore();
   const canvasStore = getCanvasStore();
+  const ddpStore = getDDPStore();
 
   onMount(async () => {
     try {
@@ -52,6 +54,7 @@
       if (typeof groupStore.init === 'function') await groupStore.init();
       if (typeof dashboardStore.init === 'function') await dashboardStore.init();
       if (typeof canvasStore.init === 'function') await canvasStore.init();
+      if (typeof ddpStore.init === 'function') await ddpStore.init();
     } catch (err) {
       console.warn('[App] Error initializing stores on mount:', err);
     }
@@ -428,6 +431,7 @@
                         isPinned={true}
                         cardSize={item.size}
                         showSizeToggle={true}
+                        {ddpStore}
                         onTogglePower={(id) => store.togglePower(id)}
                         onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
                         onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
@@ -446,6 +450,7 @@
                         isPinned={true}
                         cardSize={item.size}
                         showSizeToggle={true}
+                        {ddpStore}
                         onTogglePower={(id, pwr) =>
                           groupStore.setGroupState(
                             id,
@@ -482,6 +487,7 @@
                         isPinned={true}
                         cardSize={item.size}
                         showSizeToggle={true}
+                        {ddpStore}
                         onEditLayout={() => {
                           canvasStore.selectRoom(item.data.id);
                           activeTab = 'canvas';
@@ -590,6 +596,7 @@
                           palettes={store.palettes}
                           isPinned={true}
                           cardSize={item.size}
+                          {ddpStore}
                           onTogglePower={(id) => store.togglePower(id)}
                           onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
                           onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
@@ -607,6 +614,7 @@
                           palettes={store.palettes}
                           isPinned={true}
                           cardSize={item.size}
+                          {ddpStore}
                           onTogglePower={(id, pwr) =>
                             groupStore.setGroupState(
                               id,
@@ -639,6 +647,7 @@
                           placements={canvasStore.placements}
                           isPinned={true}
                           cardSize={item.size}
+                          {ddpStore}
                           onEditLayout={() => {
                             canvasStore.selectRoom(item.data.id);
                             activeTab = 'canvas';
@@ -754,6 +763,7 @@
                   palettes={store.palettes}
                   isPinned={dashboardStore.isPinned(room.id)}
                   cardSize={dashboardStore.getSize(room.id)}
+                  {ddpStore}
                   onEditLayout={() => {
                     canvasStore.selectRoom(room.id);
                     activeTab = 'canvas';
@@ -815,6 +825,7 @@
                     palettes={store.palettes}
                     isPinned={dashboardStore.isPinned(group.id)}
                     cardSize={dashboardStore.getSize(group.id)}
+                    {ddpStore}
                     onTogglePower={(id, pwr) =>
                       groupStore.setGroupState(
                         id,

@@ -46,19 +46,29 @@
 
   // Devices belonging to this specific room
   let roomDevices = $derived.by(() => {
-    if (!currentRoomId) return devices;
-    const placedDevIds = placements.filter((p) => p.roomId === currentRoomId).map((p) => p.deviceId);
+    const roomObj = rooms.find((r) => r.id === currentRoomId);
+    if (roomObj && Array.isArray(roomObj.deviceIDs) && roomObj.deviceIDs.length > 0) {
+      const filtered = devices.filter((d) => roomObj.deviceIDs.includes(d.id));
+      if (filtered.length > 0) return filtered;
+    }
 
-    if (placedDevIds.length === 0) return devices;
-    const filtered = devices.filter((d) => placedDevIds.includes(d.id));
-    return filtered.length > 0 ? filtered : devices;
+    if (currentRoomId) {
+      const placedDevIds = placements.filter((p) => p.roomId === currentRoomId).map((p) => p.deviceId);
+      if (placedDevIds.length > 0) {
+        const filtered = devices.filter((d) => placedDevIds.includes(d.id));
+        if (filtered.length > 0) return filtered;
+      }
+    }
+    return devices;
   });
 
   async function handleSaveLayout() {
     // Record current placements for all roomDevices into store placements array
+    const targetRoom = currentRoomId || 'default';
     roomDevices.forEach((dev) => {
       const p = getPlacement(dev.id);
       onUpdatePlacement(dev.id, {
+        roomId: targetRoom,
         posX: p.posX,
         posY: p.posY,
         rotation: p.rotation,
@@ -80,12 +90,14 @@
     }
   });
 
-  // Helper to find or initialize placement for a device
+  // Helper to find or initialize placement for a device in the active room
   function getPlacement(devId) {
-    const found = placements.find((p) => p.deviceId === devId);
+    const targetRoom = currentRoomId || 'default';
+    const found = placements.find((p) => p.deviceId === devId && p.roomId === targetRoom);
     return (
       found || {
         deviceId: devId,
+        roomId: targetRoom,
         posX: 100 + (devices.findIndex((d) => d.id === devId) % 4) * 220,
         posY: 100 + Math.floor(devices.findIndex((d) => d.id === devId) / 4) * 160,
         rotation: 0,
@@ -99,16 +111,25 @@
     selectedDeviceId = devId;
     isDragging = true;
     const placement = getPlacement(devId);
+    const gridEl = document.querySelector('.select-none');
+    const rect = gridEl ? gridEl.getBoundingClientRect() : { left: 0, top: 0 };
     dragOffset = {
-      x: e.clientX - placement.posX,
-      y: e.clientY - placement.posY
+      x: e.clientX - rect.left - placement.posX,
+      y: e.clientY - rect.top - placement.posY
     };
+    try {
+      if (e.currentTarget && typeof e.currentTarget.setPointerCapture === 'function') {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
+    } catch (_) {}
   }
 
   function handlePointerMove(e) {
     if (!isDragging || !selectedDeviceId) return;
-    let rawX = e.clientX - dragOffset.x;
-    let rawY = e.clientY - dragOffset.y;
+    const gridEl = document.querySelector('.select-none');
+    const rect = gridEl ? gridEl.getBoundingClientRect() : { left: 0, top: 0 };
+    let rawX = e.clientX - rect.left - dragOffset.x;
+    let rawY = e.clientY - rect.top - dragOffset.y;
 
     if (snapToGrid) {
       rawX = Math.round(rawX / 20) * 20;
@@ -121,8 +142,15 @@
     onUpdatePlacement(selectedDeviceId, { posX: rawX, posY: rawY });
   }
 
-  function handlePointerUp() {
-    isDragging = false;
+  function handlePointerUp(e) {
+    if (isDragging) {
+      isDragging = false;
+      try {
+        if (e && e.currentTarget && typeof e.currentTarget.releasePointerCapture === 'function') {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch (_) {}
+    }
   }
 
   function resetRotation(devId) {
@@ -241,6 +269,8 @@
     return colors;
   }
 </script>
+
+<svelte:window onpointermove={handlePointerMove} onpointerup={handlePointerUp} />
 
 <div
   class="space-y-6"
@@ -368,7 +398,9 @@
         tabindex="0"
         aria-label="Drag element for {dev.name}"
         style="transform: translate({p.posX}px, {p.posY}px) rotate({p.rotation}deg) scale({p.scale});"
-        class="absolute cursor-grab active:cursor-grabbing transition-transform duration-200 ease-out group z-10"
+        class="absolute cursor-grab active:cursor-grabbing group z-10 {isDragging && isSelected
+          ? 'transition-none'
+          : 'transition-transform duration-200 ease-out'}"
         onpointerdown={(e) => handlePointerDown(e, dev.id)}
         onkeydown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') selectedDeviceId = dev.id;

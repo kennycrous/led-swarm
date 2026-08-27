@@ -9,7 +9,8 @@
     Maximize2,
     MoreVertical,
     Trash2,
-    Edit3
+    Edit3,
+    Zap
   } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
@@ -22,6 +23,7 @@
     isPinned = true,
     cardSize = 'normal',
     showSizeToggle = false,
+    ddpStore,
     onEditLayout = () => {},
     onRename = () => {},
     onTogglePin = () => {},
@@ -37,6 +39,18 @@
   let selectedColor = $state('#06b6d4');
   let selectedEffect = $state(0);
   let selectedPalette = $state(0);
+
+  let isDDPActive = $derived(ddpStore?.isStreaming('room', room.id) || false);
+  let ddpStatus = $derived(ddpStore?.getStreamStatus('room', room.id) || {});
+
+  const ddpSpatialEffects = [
+    { id: 'spatial_ripple', name: '🎯 2D DDP: Radial Room Ripple' },
+    { id: 'spatial_sweep', name: '↔️ 2D DDP: Directional Room Sweep' },
+    { id: 'rainbow_wave', name: '⚡ DDP: Rainbow Wave' },
+    { id: 'digital_rain', name: '⚡ DDP: Matrix Rain' },
+    { id: 'pulse_beads', name: '⚡ DDP: Neon Pulse' },
+    { id: 'cyber_fire', name: '⚡ DDP: Cyber Flame' }
+  ];
 
   function handleSaveTitle() {
     if (editedTitle.trim() && editedTitle.trim() !== room.title) {
@@ -246,8 +260,25 @@
       </div>
     </div>
 
-    <!-- Power, Options Menu & Controls -->
+    <!-- Power, DDP 60, Options Menu & Controls -->
     <div class="flex items-center gap-1.5 relative">
+      <button
+        onclick={() => {
+          if (isDDPActive) {
+            ddpStore?.stopStream('room', room.id);
+          } else {
+            ddpStore?.startStream('room', room.id, 'spatial_ripple', 1.0, 1.0);
+          }
+        }}
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-mono text-[11px] font-bold transition-all duration-200 cursor-pointer {isDDPActive
+          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 glow-amber'
+          : 'bg-[#090e17]/80 text-slate-400 hover:text-amber-400 border border-slate-800'}"
+        title="Toggle DDP 60 FPS 2D Spatial Realtime Stream for Room"
+      >
+        <Zap class="w-3.5 h-3.5 {isDDPActive ? 'animate-pulse text-amber-400' : ''}" />
+        <span>{isDDPActive ? `${ddpStatus.fps || 60} FPS` : 'DDP 60'}</span>
+      </button>
+
       <button
         onclick={toggleRoomPower}
         class="p-2.5 rounded-xl transition-all duration-200 {isAnyOn
@@ -400,27 +431,50 @@
     </div>
 
     <!-- Custom Glassmorphic CyberSelect Dropdowns -->
-    <div class="grid grid-cols-2 gap-2">
-      <!-- FX CyberSelect -->
-      <CyberSelect
-        value={selectedEffect}
-        options={effects}
-        icon={Sparkles}
-        iconColor="text-cyan-400"
-        hoverBorder="hover:border-cyan-500/40"
-        onChange={handleEffectChange}
-      />
+    {#if isDDPActive}
+      <div class="space-y-2 bg-amber-500/10 p-2.5 rounded-2xl border border-amber-500/30">
+        <div class="flex items-center justify-between text-[11px] font-mono text-amber-400 font-bold">
+          <span class="flex items-center gap-1">
+            <Zap class="w-3 h-3 text-amber-400 animate-pulse" />
+            2D Room Canvas Spatial DDP Stream
+          </span>
+          <span>{ddpStatus.fps || 60} FPS</span>
+        </div>
+        <select
+          value={ddpStatus.effect || 'spatial_ripple'}
+          onchange={(e) => {
+            ddpStore?.startStream('room', room.id, e.target.value, ddpStatus.speed || 1.0, ddpStatus.intensity || 1.0);
+          }}
+          class="w-full bg-[#06090e] border border-amber-500/40 rounded-xl px-2.5 py-1 text-xs font-mono text-amber-300 focus:outline-none"
+        >
+          {#each ddpSpatialEffects as eff (eff.id)}
+            <option value={eff.id}>{eff.name}</option>
+          {/each}
+        </select>
+      </div>
+    {:else}
+      <div class="grid grid-cols-2 gap-2">
+        <!-- FX CyberSelect -->
+        <CyberSelect
+          value={selectedEffect}
+          options={effects}
+          icon={Sparkles}
+          iconColor="text-cyan-400"
+          hoverBorder="hover:border-cyan-500/40"
+          onChange={handleEffectChange}
+        />
 
-      <!-- Palette CyberSelect -->
-      <CyberSelect
-        value={selectedPalette}
-        options={palettes}
-        icon={Palette}
-        iconColor="text-purple-400"
-        hoverBorder="hover:border-purple-500/40"
-        onChange={handlePaletteChange}
-      />
-    </div>
+        <!-- Palette CyberSelect -->
+        <CyberSelect
+          value={selectedPalette}
+          options={palettes}
+          icon={Palette}
+          iconColor="text-purple-400"
+          hoverBorder="hover:border-purple-500/40"
+          onChange={handlePaletteChange}
+        />
+      </div>
+    {/if}
 
     <!-- Action Controls Footer -->
     <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/60">

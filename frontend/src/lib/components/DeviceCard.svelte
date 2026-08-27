@@ -1,5 +1,5 @@
 <script>
-  import { Power, Edit2, Check, Palette, Sparkles, Sun, Pin, Maximize2, Cpu, MoreVertical } from 'lucide-svelte';
+  import { Power, Edit2, Check, Palette, Sparkles, Sun, Pin, Maximize2, Cpu, MoreVertical, Zap } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
   let {
@@ -9,6 +9,7 @@
     isPinned = true,
     cardSize = 'normal',
     showSizeToggle = false,
+    ddpStore,
     onTogglePower = () => {},
     onSetBrightness = () => {},
     onSetColor = () => {},
@@ -23,6 +24,16 @@
   let nickname = $state('');
   let selectedColor = $state('#06b6d4');
   let isMenuOpen = $state(false);
+
+  let isDDPActive = $derived(ddpStore?.isStreaming('device', device.id) || false);
+  let ddpStatus = $derived(ddpStore?.getStreamStatus('device', device.id) || {});
+
+  const ddpEffects = [
+    { id: 'rainbow_wave', name: '⚡ DDP: Rainbow Wave' },
+    { id: 'digital_rain', name: '⚡ DDP: Matrix Rain' },
+    { id: 'pulse_beads', name: '⚡ DDP: Neon Pulse' },
+    { id: 'cyber_fire', name: '⚡ DDP: Cyber Flame' }
+  ];
 
   function startEditing() {
     nickname = device.name;
@@ -102,8 +113,25 @@
       </div>
     </div>
 
-    <!-- Power & Card Options Menu -->
+    <!-- Power, DDP 60 & Card Options Menu -->
     <div class="flex items-center gap-1.5 relative">
+      <button
+        onclick={() => {
+          if (isDDPActive) {
+            ddpStore?.stopStream('device', device.id);
+          } else {
+            ddpStore?.startStream('device', device.id, 'rainbow_wave', 1.0, 1.0, [device.ipAddress], device.ledCount);
+          }
+        }}
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-mono text-[11px] font-bold transition-all duration-200 cursor-pointer {isDDPActive
+          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 glow-amber'
+          : 'bg-[#090e17]/80 text-slate-400 hover:text-amber-400 border border-slate-800'}"
+        title="Toggle DDP 60 FPS Realtime Stream"
+      >
+        <Zap class="w-3.5 h-3.5 {isDDPActive ? 'animate-pulse text-amber-400' : ''}" />
+        <span>{isDDPActive ? `${ddpStatus.fps || 60} FPS` : 'DDP 60'}</span>
+      </button>
+
       <button
         onclick={() => onTogglePower(device.id)}
         class="p-2.5 rounded-xl transition-all duration-200 {device.state?.on
@@ -196,31 +224,62 @@
     </div>
 
     <!-- Custom Glassmorphic CyberSelect Dropdowns -->
-    <div class="grid grid-cols-2 gap-2">
-      <!-- FX CyberSelect -->
-      <CyberSelect
-        value={device.state?.seg?.[0]?.fx ?? 0}
-        options={effects}
-        icon={Sparkles}
-        iconColor="text-cyan-400"
-        hoverBorder="hover:border-cyan-500/40"
-        onChange={(fxId) => onSetEffect(device.id, fxId)}
-      />
+    {#if isDDPActive}
+      <div class="space-y-2 bg-amber-500/10 p-2.5 rounded-2xl border border-amber-500/30">
+        <div class="flex items-center justify-between text-[11px] font-mono text-amber-400 font-bold">
+          <span class="flex items-center gap-1">
+            <Zap class="w-3 h-3 text-amber-400 animate-pulse" />
+            DDP 60 FPS Engine
+          </span>
+          <span>{ddpStatus.fps || 60} FPS</span>
+        </div>
+        <select
+          value={ddpStatus.effect || 'rainbow_wave'}
+          onchange={(e) => {
+            ddpStore?.startStream(
+              'device',
+              device.id,
+              e.target.value,
+              ddpStatus.speed || 1.0,
+              ddpStatus.intensity || 1.0,
+              [device.ipAddress],
+              device.ledCount
+            );
+          }}
+          class="w-full bg-[#06090e] border border-amber-500/40 rounded-xl px-2.5 py-1 text-xs font-mono text-amber-300 focus:outline-none"
+        >
+          {#each ddpEffects as eff (eff.id)}
+            <option value={eff.id}>{eff.name}</option>
+          {/each}
+        </select>
+      </div>
+    {:else}
+      <div class="grid grid-cols-2 gap-2">
+        <!-- FX CyberSelect -->
+        <CyberSelect
+          value={device.state?.seg?.[0]?.fx ?? 0}
+          options={effects}
+          icon={Sparkles}
+          iconColor="text-cyan-400"
+          hoverBorder="hover:border-cyan-500/40"
+          onChange={(fxId) => onSetEffect(device.id, fxId)}
+        />
 
-      <!-- Palette CyberSelect -->
-      <CyberSelect
-        value={device.state?.seg?.[0]?.pal ?? 0}
-        options={palettes}
-        icon={Palette}
-        iconColor="text-purple-400"
-        hoverBorder="hover:border-purple-500/40"
-        onChange={(palId) => {
-          onSetPalette(device.id, palId);
-          if ((device.state?.seg?.[0]?.fx ?? 0) === 0) {
-            onSetEffect(device.id, 2);
-          }
-        }}
-      />
-    </div>
+        <!-- Palette CyberSelect -->
+        <CyberSelect
+          value={device.state?.seg?.[0]?.pal ?? 0}
+          options={palettes}
+          icon={Palette}
+          iconColor="text-purple-400"
+          hoverBorder="hover:border-purple-500/40"
+          onChange={(palId) => {
+            onSetPalette(device.id, palId);
+            if ((device.state?.seg?.[0]?.fx ?? 0) === 0) {
+              onSetEffect(device.id, 2);
+            }
+          }}
+        />
+      </div>
+    {/if}
   </div>
 </div>
