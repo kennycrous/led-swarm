@@ -1,0 +1,14 @@
+.plans/005-testing-and-linting.md
+  h_e41d77f8309f5c 4,8,10,12-17,21,23,25-29,31-36,38-40,44-100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e8e65dcaa2d2f91eccff246cd8ff55de36e55525",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
