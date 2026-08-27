@@ -43,13 +43,14 @@ type activeStream struct {
 }
 
 type DDPStreamer struct {
-	mu        sync.RWMutex
-	streams   map[string]*activeStream
-	targetFPS int
-	devMgr    *DeviceManager
-	groupMgr  *GroupManager
-	canvasMgr *CanvasManager
-	hub       *Hub
+	mu          sync.RWMutex
+	streams     map[string]*activeStream
+	targetFPS   int
+	devMgr      *DeviceManager
+	groupMgr    *GroupManager
+	canvasMgr   *CanvasManager
+	audioEngine *AudioEngine
+	hub         *Hub
 }
 
 func NewDDPStreamer() *DDPStreamer {
@@ -59,12 +60,13 @@ func NewDDPStreamer() *DDPStreamer {
 	}
 }
 
-func (ds *DDPStreamer) SetManagers(devMgr *DeviceManager, groupMgr *GroupManager, canvasMgr *CanvasManager, hub *Hub) {
+func (ds *DDPStreamer) SetManagers(devMgr *DeviceManager, groupMgr *GroupManager, canvasMgr *CanvasManager, audioEngine *AudioEngine, hub *Hub) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.devMgr = devMgr
 	ds.groupMgr = groupMgr
 	ds.canvasMgr = canvasMgr
+	ds.audioEngine = audioEngine
 	ds.hub = hub
 }
 
@@ -236,9 +238,14 @@ func (ds *DDPStreamer) runStreamLoop(
 		case t := <-ticker.C:
 			elapsedSec := t.Sub(startTime).Seconds()
 
+			var audioState AudioState
+			if ds.audioEngine != nil {
+				audioState = ds.audioEngine.GetAudioState()
+			}
+
 			if target.TargetType == "room" && len(pixel2DMap) > 0 {
 				// Render 2D Spatial Effects
-				perIPBuffers := Generate2DSpatialEffectFrame(target.Effect, pixel2DMap, len(targetIPs), elapsedSec, target.Speed, target.Intensity)
+				perIPBuffers := Generate2DSpatialEffectFrame(target.Effect, pixel2DMap, len(targetIPs), elapsedSec, target.Speed, target.Intensity, audioState)
 				for ipIdx, buf := range perIPBuffers {
 					if ipIdx < len(sockets) && len(buf) > 0 {
 						packet := BuildDDPPacket(seq, 0, len(buf), buf)
@@ -247,7 +254,7 @@ func (ds *DDPStreamer) runStreamLoop(
 				}
 			} else {
 				// 1D Linear Buffer Stream
-				rgbBuffer := GenerateDDPEffectFrame(target.Effect, totalLEDs, elapsedSec, target.Speed, target.Intensity)
+				rgbBuffer := GenerateDDPEffectFrame(target.Effect, totalLEDs, elapsedSec, target.Speed, target.Intensity, audioState)
 				// Broadcast to all sockets
 				packet := BuildDDPPacket(seq, 0, len(rgbBuffer), rgbBuffer)
 				for _, s := range sockets {
@@ -374,6 +381,7 @@ func Generate2DSpatialEffectFrame(
 	timeSec float64,
 	speed float64,
 	intensity float64,
+	audio AudioState,
 ) [][]byte {
 	buffers := make([][]byte, ipCount)
 	t := timeSec * speed
@@ -405,6 +413,10 @@ func Generate2DSpatialEffectFrame(
 		sumX, sumY = 1000.0, 600.0
 	}
 
+	bassVal := audio.Bass * intensity
+	peakVal := audio.Peak * intensity
+	trebleVal := audio.Treble * intensity
+
 	for _, p := range pixels {
 		if p.IPIndex >= ipCount {
 			continue
@@ -418,6 +430,42 @@ func Generate2DSpatialEffectFrame(
 		var r, g, b uint8
 
 		switch effect {
+		case "audio_bass_pulse":
+			dist := math.Sqrt((p.X-sumX)*(p.X-sumX) + (p.Y-sumY)*(p.Y-sumY))
+			wave := math.Max(0, 1.0-(dist/900.0)) * bassVal
+			r, g, b = hsvToRGB(0.82, 1.0, math.Min(1.0, wave*1.8))
+
+		case "audio_spectrum_waterfall":
+			binIdx := int((p.X / 2000.0) * 15.0)
+			if binIdx < 0 {
+				binIdx = 0
+			}
+			if binIdx > 15 {
+				binIdx = 15
+			}
+			energy := audio.Bins[binIdx] * intensity
+			hue := float64(binIdx) / 16.0
+			r, g, b = hsvToRGB(hue, 1.0, math.Min(1.0, energy))
+
+		case "audio_vu_meter":
+			pos := (p.X*0.6 + p.Y*0.4) / 2000.0
+			if pos <= peakVal {
+				hue := (1.0 - pos) * 0.35 // Green -> Gold -> Red
+				r, g, b = hsvToRGB(hue, 1.0, intensity)
+			} else {
+				r, g, b = 0, 0, 0
+			}
+
+		case "audio_treble_sparkle":
+			pos := (p.X*0.5 + p.Y*0.5) / 2000.0
+			hash := math.Mod(math.Sin(pos*12.9898)*43758.5453, 1.0)
+			if hash > 0.65 && trebleVal > 0.2 {
+				v := uint8(255 * math.Min(1.0, trebleVal*2.0))
+				r, g, b = v, v, uint8(float64(v)*0.9)
+			} else {
+				r, g, b = 0, 0, 0
+			}
+
 		case "spatial_sweep":
 			sweepPos := math.Mod(t*500.0, 2200.0)
 			dist := math.Abs(p.X - sweepPos)
@@ -495,15 +543,72 @@ func BuildDDPPacket(seq uint8, offset uint32, payloadLength int, payload []byte)
 	return packet
 }
 
-func GenerateDDPEffectFrame(effect string, ledCount int, timeSec float64, speed float64, intensity float64) []byte {
+func GenerateDDPEffectFrame(effect string, ledCount int, timeSec float64, speed float64, intensity float64, audio AudioState) []byte {
 	buf := make([]byte, ledCount*3)
 	if ledCount <= 0 {
 		return buf
 	}
 
 	t := timeSec * speed
+	bassVal := audio.Bass * intensity
+	peakVal := audio.Peak * intensity
+	trebleVal := audio.Treble * intensity
 
 	switch effect {
+	case "audio_bass_pulse":
+		v := uint8(255 * math.Min(1.0, bassVal*1.8))
+		r, g, b := hsvToRGB(0.82, 1.0, float64(v)/255.0)
+		for i := 0; i < ledCount; i++ {
+			buf[i*3] = r
+			buf[i*3+1] = g
+			buf[i*3+2] = b
+		}
+
+	case "audio_spectrum_waterfall":
+		for i := 0; i < ledCount; i++ {
+			binIdx := int((float64(i) / float64(ledCount)) * 15.0)
+			if binIdx > 15 {
+				binIdx = 15
+			}
+			energy := audio.Bins[binIdx] * intensity
+			hue := float64(binIdx) / 16.0
+			r, g, b := hsvToRGB(hue, 1.0, math.Min(1.0, energy))
+			buf[i*3] = r
+			buf[i*3+1] = g
+			buf[i*3+2] = b
+		}
+
+	case "audio_vu_meter":
+		maxLed := int(peakVal * float64(ledCount))
+		for i := 0; i < ledCount; i++ {
+			if i <= maxLed {
+				hue := (1.0 - float64(i)/float64(ledCount)) * 0.35
+				r, g, b := hsvToRGB(hue, 1.0, intensity)
+				buf[i*3] = r
+				buf[i*3+1] = g
+				buf[i*3+2] = b
+			} else {
+				buf[i*3] = 0
+				buf[i*3+1] = 0
+				buf[i*3+2] = 0
+			}
+		}
+
+	case "audio_treble_sparkle":
+		for i := 0; i < ledCount; i++ {
+			hash := math.Mod(math.Sin(float64(i+1)*12.9898)*43758.5453, 1.0)
+			if hash > 0.65 && trebleVal > 0.2 {
+				v := uint8(255 * math.Min(1.0, trebleVal*2.0))
+				buf[i*3] = v
+				buf[i*3+1] = v
+				buf[i*3+2] = uint8(float64(v) * 0.9)
+			} else {
+				buf[i*3] = 0
+				buf[i*3+1] = 0
+				buf[i*3+2] = 0
+			}
+		}
+
 	case "digital_rain":
 		for i := 0; i < ledCount; i++ {
 			pos := float64(i) / float64(ledCount)

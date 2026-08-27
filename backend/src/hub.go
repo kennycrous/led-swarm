@@ -22,11 +22,12 @@ type Client struct {
 }
 
 type Hub struct {
-	clients    map[*Client]bool
-	broadcast  chan []byte
-	register   chan *Client
-	unregister chan *Client
-	mu         sync.RWMutex
+	clients     map[*Client]bool
+	broadcast   chan []byte
+	register    chan *Client
+	unregister  chan *Client
+	audioEngine *AudioEngine
+	mu          sync.RWMutex
 }
 
 func NewHub() *Hub {
@@ -36,6 +37,21 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
+}
+
+func (h *Hub) SetAudioEngine(ae *AudioEngine) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.audioEngine = ae
+}
+
+type AudioFFTMessage struct {
+	Type   string    `json:"type"`
+	Bins   []float64 `json:"bins"`
+	Bass   float64   `json:"bass"`
+	Mid    float64   `json:"mid"`
+	Treble float64   `json:"treble"`
+	Peak   float64   `json:"peak"`
 }
 
 func (h *Hub) Run() {
