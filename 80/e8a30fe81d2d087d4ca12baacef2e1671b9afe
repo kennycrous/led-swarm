@@ -1,0 +1,14 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 21,77,80-84,86-90,92-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "80e8a30fe81d2d087d4ca12baacef2e1671b9afe",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
