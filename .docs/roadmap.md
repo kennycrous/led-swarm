@@ -32,28 +32,35 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 004: 2D Visual Layout Canvas Editor                                        |
+|  Slice 004: Customizable Dashboard & Device Visibility Management                 |
+|  - Pin / unpin individual strips, groups, or scene presets to dashboard           |
+|  - Settings -> Strips & Devices Management view showing all network strips        |
++-----------------------------------------------------------------------------------+
+                                         │
+                                         ▼
++-----------------------------------------------------------------------------------+
+|  Slice 005: 2D Visual Layout Canvas Editor                                        |
 |  - Interactive 2D drag-and-drop physical strip room map                           |
 |  - Live pixel mirroring preview & spatial sweep animations                        |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 005: High-FPS DDP / UDP Pixel Streamer                                     |
+|  Slice 006: High-FPS DDP / UDP Pixel Streamer                                     |
 |  - 60 FPS DDP (UDP 4048) pixel buffer generator                                   |
 |  - Go procedural matrix animations (rainbow wave, digital rain, pulse)            |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 006: Sound Sync & Audio Reactivity Engine                                  |
+|  Slice 007: Sound Sync & Audio Reactivity Engine                                  |
 |  - Audio input FFT frequency binning (Bass, Mid, Treble)                          |
 |  - Audio energy mapping to LED spatial pulses & live spectrum UI                  |
 +-----------------------------------------------------------------------------------+
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 007: Desktop Integration, Settings & Production Release                    |
+|  Slice 008: Desktop Integration, Settings & Production Release                    |
 |  - System tray icon & minimize-to-tray in Wails                                   |
 |  - Manual IP subnet scanner & GitHub Actions ghcr.io Docker workflow              |
 +-----------------------------------------------------------------------------------+
@@ -111,7 +118,27 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟡 Slice 004: 2D Visual Layout Canvas Editor
+### 🔵 Slice 004: Customizable Dashboard & Device Visibility Management
+- **Objective**: Enable users to pin/unpin individual WLED light strips, virtual groups, or scene presets to/from the main Cyber Dashboard layout, and provide a dedicated Strips & Devices management view in Settings.
+- **Backend Deliverables**:
+  - Database table `dashboard_items` (item_id, item_type: 'device'|'group'|'scene', position, is_pinned).
+  - Auto-pinning logic: Newly discovered WLED devices automatically pin to the dashboard layout.
+  - REST API & Wails desktop endpoints for pinning, unpinning, and reordering dashboard cards (`/api/v1/dashboard/pins`, `/api/v1/dashboard/reorder`).
+- **Frontend Deliverables**:
+  - **Customizable Main Dashboard**:
+    - Renders pinned cards (mix of Individual Strip Cards, Group Cards, and 1-Click Scene Preset Cards).
+    - Quick "Pin / Unpin" toggle action on cards.
+  - **Settings -> Strips & Devices Management View**:
+    - Complete list of ALL discovered and saved WLED light strips on the network regardless of whether they are visible/pinned on the main dashboard.
+    - Per-strip management: Pin/unpin toggle, nickname editor, manual IP adder, discover streams trigger, and delete/forget device action.
+- **Acceptance Criteria**:
+  - User can unpin 5 individual strips from the dashboard while keeping their parent Group card visible on the dashboard.
+  - Settings -> "Strips & Devices" displays all WLED strips on the network regardless of dashboard visibility status.
+  - Newly discovered WLED devices auto-appear on the dashboard and in Settings.
+
+---
+
+### 🟡 Slice 005: 2D Visual Layout Canvas Editor
 - **Objective**: Create an interactive 2D visual workspace where users drag and position WLED light strips according to their real-world physical room layout.
 - **Backend Deliverables**:
   - API endpoints and SQLite persistence for `canvas_placements` (pos_x, pos_y, rotation, scale, length, geometry_type).
@@ -127,7 +154,7 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟠 Slice 005: High-FPS DDP / UDP Pixel Streamer
+### 🟠 Slice 006: High-FPS DDP / UDP Pixel Streamer
 - **Objective**: Stream high-frequency (60 FPS) raw RGB pixel buffers over DDP UDP port 4048 for custom matrix animations and swarm visuals.
 - **Backend Deliverables**:
   - DDP UDP packet generator emitting frame buffers on UDP port 4048.
@@ -140,7 +167,7 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-## 🔴 Slice 006: Sound Sync & Audio Reactivity Engine
+### 🔴 Slice 007: Sound Sync & Audio Reactivity Engine
 - **Objective**: Capture live audio input and map frequency spectrum energy to WLED spatial animations.
 - **Backend / Frontend Deliverables**:
   - Audio capture integration (native audio input or WebAudio FFT bridge).
@@ -152,7 +179,7 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-## ⚪ Slice 007: Desktop Integration, Settings & Production Release
+### ⚪ Slice 008: Desktop Integration, Settings & Production Release
 - **Objective**: Add desktop OS integration features and automated production deployment workflows.
 - **Backend / Frontend Deliverables**:
   - System tray icon & minimize-to-tray behavior in Wails desktop app.
