@@ -1,0 +1,14 @@
+backend/src/ddp_streamer.go
+  h_e41d77f8309f5c 334,343-344,355,395-406,422,424-425,428-446,448,451-466,470-471,473
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7fb372ee71e97ab7c670a08deaa480e1a4fbea8a",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
