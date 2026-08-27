@@ -1,0 +1,61 @@
+# ==========================================
+# LED Swarm Orchestrator - Root .gitignore
+# ==========================================
+
+# Go Binaries & Built Executables
+backend/led-swarm-server
+backend/led-swarm.exe
+*.exe
+*.exe.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+build/bin/
+
+# Embedded Build Outputs
+backend/src/dist/assets/
+backend/src/dist/index.html
+backend/src/dist/favicon.svg
+
+# SQLite Databases & Storage
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+led-swarm.db
+backend/led-swarm.db
+
+# Frontend Dependencies & Build Caches
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+.eslintcache
+
+# Wails Auto-Generated Bindings (re-generated on wails dev/build)
+frontend/src/lib/wailsjs/
+
+# Temporary Files & Logs
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# IDE & Editor Directories
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

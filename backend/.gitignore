@@ -1,0 +1,10 @@
+# Backend Go .gitignore
+led-swarm-server
+led-swarm.exe
+*.db
+*.db-journal
+*.log
+src/dist/assets/
+src/dist/index.html
+tmp/
+build-errors.log

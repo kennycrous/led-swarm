@@ -1,0 +1,24 @@
+# Air Configuration for Go Live Reload (backend/.air.toml)
+
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/main ./src"
+  bin = "./tmp/main"
+  args_bin = ["--server", "--port=8080"]
+  delay = 1000
+  exclude_dir = ["tmp", "vendor", "testdata", "src/dist"]
+  exclude_regex = ["_test\\.go"]
+  include_ext = ["go"]
+  kill_delay = "0s"
+  stop_on_error = true
+
+[color]
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+
+[misc]
+  clean_on_exit = true
