@@ -11,21 +11,46 @@
     Wifi, 
     Power, 
     Activity,
-    Plus
+    Plus,
+    Camera,
+    Play,
+    Sparkles,
+    Sun,
+    Moon,
+    Film,
+    Flame
   } from 'lucide-svelte';
   import { getDeviceStore } from '$lib/stores/deviceStore.svelte.js';
+  import { getGroupStore } from '$lib/stores/groupStore.svelte.js';
   import DeviceCard from '$lib/components/DeviceCard.svelte';
   import ManualIpModal from '$lib/components/ManualIpModal.svelte';
+  import GroupCard from '$lib/components/GroupCard.svelte';
+  import SceneCard from '$lib/components/SceneCard.svelte';
+  import CreateGroupModal from '$lib/components/CreateGroupModal.svelte';
+  import CaptureSceneModal from '$lib/components/CaptureSceneModal.svelte';
 
   const store = getDeviceStore();
+  const groupStore = getGroupStore();
 
   let activeTab = $state('dashboard');
   let masterPower = $state(true);
   let masterBrightness = $state(200);
   let isAddModalOpen = $state(false);
+  let isCreateGroupModalOpen = $state(false);
+  let isCaptureSceneModalOpen = $state(false);
+
+  const displayedDevices = $derived(
+    groupStore.activeGroupId 
+      ? store.devices.filter(d => {
+          const g = groupStore.groups.find(g => g.id === groupStore.activeGroupId);
+          return g?.deviceIds?.includes(d.id);
+        })
+      : store.devices
+  );
 
   onMount(() => {
     store.init();
+    groupStore.init();
   });
 
   function toggleMasterPower() {
@@ -58,8 +83,16 @@
         </button>
 
         <button 
+          onclick={() => activeTab = 'scenes'}
+          class="p-2.5 rounded-xl transition-all duration-200 {activeTab === 'scenes' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 glow-magenta' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'}"
+          title="Groups & Scenes"
+        >
+          <Sliders class="w-5 h-5" />
+        </button>
+
+        <button 
           onclick={() => activeTab = 'canvas'}
-          class="p-2.5 rounded-xl transition-all duration-200 {activeTab === 'canvas' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 glow-magenta' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'}"
+          class="p-2.5 rounded-xl transition-all duration-200 {activeTab === 'canvas' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'}"
           title="2D Visual Canvas"
         >
           <Layers class="w-5 h-5" />
@@ -71,14 +104,6 @@
           title="Audio Reactivity"
         >
           <Radio class="w-5 h-5" />
-        </button>
-
-        <button 
-          onclick={() => activeTab = 'scenes'}
-          class="p-2.5 rounded-xl transition-all duration-200 {activeTab === 'scenes' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'}"
-          title="Groups & Scenes"
-        >
-          <Sliders class="w-5 h-5" />
         </button>
       </nav>
     </div>
@@ -102,8 +127,21 @@
           LED SWARM ORCHESTRATOR
         </h1>
         <span class="px-2 py-0.5 text-[10px] font-mono tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full">
-          v0.2.0-LIVE
+          v0.3.0-LIVE
         </span>
+      </div>
+
+      <!-- Top Quick Scene Presets -->
+      <div class="hidden lg:flex items-center gap-2">
+        {#each groupStore.scenes.slice(0, 4) as scene}
+          <button
+            onclick={() => groupStore.applyScene(scene.id)}
+            class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900/80 hover:bg-cyan-500/20 border border-slate-800 hover:border-cyan-500/40 text-xs font-mono text-slate-300 hover:text-cyan-300 transition-all cursor-pointer shadow-sm"
+          >
+            <Sparkles class="w-3.5 h-3.5 text-cyan-400" />
+            <span>{scene.name}</span>
+          </button>
+        {/each}
       </div>
 
       <!-- Master Swarm Controls -->
@@ -125,7 +163,7 @@
         <!-- Add IP Button -->
         <button 
           onclick={() => isAddModalOpen = true}
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono hover:bg-purple-500/20 hover:border-purple-400 transition-all duration-200"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono hover:bg-purple-500/20 hover:border-purple-400 transition-all duration-200 cursor-pointer"
         >
           <Plus class="w-3.5 h-3.5" />
           ADD IP
@@ -135,7 +173,7 @@
         <button 
           onclick={() => store.triggerScan()}
           disabled={store.isScanning}
-          class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono hover:bg-cyan-500/20 hover:border-cyan-400 transition-all duration-200 disabled:opacity-50"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono hover:bg-cyan-500/20 hover:border-cyan-400 transition-all duration-200 disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw class="w-3.5 h-3.5 {store.isScanning ? 'animate-spin text-cyan-400' : ''}" />
           {store.isScanning ? 'SCANNING...' : 'DISCOVER STREAMS'}
@@ -144,7 +182,7 @@
         <!-- Master Power -->
         <button 
           onclick={toggleMasterPower}
-          class="p-2 rounded-xl border transition-all duration-200 {masterPower ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 glow-cyan' : 'bg-slate-900/60 text-slate-500 border-slate-800'}"
+          class="p-2 rounded-xl border transition-all duration-200 cursor-pointer {masterPower ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 glow-cyan' : 'bg-slate-900/60 text-slate-500 border-slate-800'}"
           title="Master Swarm Power"
         >
           <Power class="w-4 h-4" />
@@ -169,12 +207,10 @@
 
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
               <div>
-                <p class="text-xs font-mono text-slate-400">ACTIVE LEDS</p>
-                <p class="text-2xl font-bold text-purple-400 mt-1 font-mono">
-                  {store.devices.reduce((acc, d) => acc + (d.state?.on ? d.ledCount : 0), 0)}
-                </p>
+                <p class="text-xs font-mono text-slate-400">STRIP GROUPS</p>
+                <p class="text-2xl font-bold text-purple-400 mt-1 font-mono">{groupStore.groups.length}</p>
               </div>
-              <Activity class="w-8 h-8 text-purple-500/30" />
+              <Layers class="w-8 h-8 text-purple-500/30" />
             </div>
 
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
@@ -189,33 +225,52 @@
 
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
               <div>
-                <p class="text-xs font-mono text-slate-400">REALTIME SYNC</p>
-                <p class="text-2xl font-bold text-amber-400 mt-1 font-mono">
-                  {store.isConnected ? 'LIVE WS' : 'REST'}
-                </p>
+                <p class="text-xs font-mono text-slate-400">SAVED SCENES</p>
+                <p class="text-2xl font-bold text-amber-400 mt-1 font-mono">{groupStore.scenes.length}</p>
               </div>
-              <Radio class="w-8 h-8 text-amber-500/30" />
+              <Sparkles class="w-8 h-8 text-amber-500/30" />
             </div>
           </div>
+
+          <!-- Group Filter Pills -->
+          {#if groupStore.groups.length > 0}
+            <div class="flex items-center gap-2 overflow-x-auto pb-1">
+              <span class="text-xs font-mono text-slate-400 mr-2">Filter Group:</span>
+              <button 
+                onclick={() => groupStore.activeGroupId = null}
+                class="px-3 py-1 rounded-xl text-xs font-mono transition-all border cursor-pointer {!groupStore.activeGroupId ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'}"
+              >
+                All ({store.devices.length})
+              </button>
+              {#each groupStore.groups as g}
+                <button 
+                  onclick={() => groupStore.activeGroupId = g.id}
+                  class="px-3 py-1 rounded-xl text-xs font-mono transition-all border cursor-pointer {groupStore.activeGroupId === g.id ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'}"
+                >
+                  {g.name} ({g.deviceIds?.length ?? 0})
+                </button>
+              {/each}
+            </div>
+          {/if}
 
           <!-- Devices Grid -->
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-mono tracking-wider text-slate-400 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                DISCOVERED WLED STRIPS ({store.devices.length})
+                DISCOVERED WLED STRIPS ({displayedDevices.length})
               </h2>
             </div>
 
-            {#if store.devices.length === 0}
+            {#if displayedDevices.length === 0}
               <div class="glass-panel rounded-3xl p-12 text-center border border-dashed border-cyan-500/20">
                 <Wifi class="w-12 h-12 text-cyan-500/40 mx-auto mb-3 animate-pulse" />
-                <h3 class="text-base font-bold text-slate-200">No WLED Devices Found Yet</h3>
-                <p class="text-xs font-mono text-slate-500 mt-1">Click "DISCOVER STREAMS" to scan mDNS (_wled._tcp) or click "ADD IP" to add manually.</p>
+                <h3 class="text-base font-bold text-slate-200">No Devices Matching Selection</h3>
+                <p class="text-xs font-mono text-slate-500 mt-1">Click "DISCOVER STREAMS" to scan mDNS or click "ADD IP" to add manually.</p>
               </div>
             {:else}
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {#each store.devices as dev (dev.id)}
+                {#each displayedDevices as dev (dev.id)}
                   <DeviceCard 
                     device={dev}
                     effects={store.effects}
@@ -231,6 +286,91 @@
               </div>
             {/if}
           </div>
+        </div>
+
+      {:else if activeTab === 'scenes'}
+        <div class="max-w-7xl mx-auto space-y-8">
+          
+          <!-- Groups Section Header -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <Layers class="w-5 h-5 text-purple-400" />
+                Virtual Strip Groups
+              </h2>
+              <p class="text-xs font-mono text-slate-400">Combine multiple physical WLED light strips into logical zones.</p>
+            </div>
+            <button 
+              onclick={() => isCreateGroupModalOpen = true}
+              class="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all cursor-pointer"
+            >
+              <Plus class="w-4 h-4" />
+              <span>Create Group</span>
+            </button>
+          </div>
+
+          <!-- Groups Grid -->
+          {#if groupStore.groups.length === 0}
+            <div class="glass-panel rounded-3xl p-10 text-center border border-dashed border-purple-500/20">
+              <Layers class="w-10 h-10 text-purple-400/40 mx-auto mb-2" />
+              <p class="text-sm text-slate-300 font-medium">No Virtual Strip Groups Created Yet</p>
+              <p class="text-xs font-mono text-slate-500 mt-1">Create a group like "Desk Setup" or "Living Room" to control multiple strips simultaneously.</p>
+            </div>
+          {:else}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {#each groupStore.groups as g (g.id)}
+                <GroupCard 
+                  group={g}
+                  allDevices={store.devices}
+                  effects={store.effects}
+                  palettes={store.palettes}
+                  onTogglePower={(id, pwr) => groupStore.setGroupState(id, pwr ? { on: true, bri: 200, mainseg: 0, seg: [{ id: 0, on: true }] } : { on: false })}
+                  onSetBrightness={(id, bri) => groupStore.setGroupState(id, { bri })}
+                  onSetColor={(id, r, g, b) => groupStore.setGroupState(id, { seg: [{ id: 0, col: [[r, g, b]] }] })}
+                  onSetEffect={(id, fx) => groupStore.setGroupState(id, { seg: [{ id: 0, fx }] })}
+                  onSetPalette={(id, pal) => groupStore.setGroupState(id, { seg: [{ id: 0, pal, fx: 2 }] })}
+                  onDelete={(id) => groupStore.deleteGroup(id)}
+                />
+              {/each}
+            </div>
+          {/if}
+
+          <!-- Scenes Section Header -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4 pt-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <Sparkles class="w-5 h-5 text-cyan-400" />
+                Multi-Zone Scene Presets
+              </h2>
+              <p class="text-xs font-mono text-slate-400">Capture multi-device state snapshots and restore them in under 50ms.</p>
+            </div>
+            <button 
+              onclick={() => isCaptureSceneModalOpen = true}
+              class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-medium text-xs shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
+            >
+              <Camera class="w-4 h-4" />
+              <span>Capture Current Scene</span>
+            </button>
+          </div>
+
+          <!-- Scenes Grid -->
+          {#if groupStore.scenes.length === 0}
+            <div class="glass-panel rounded-3xl p-10 text-center border border-dashed border-cyan-500/20">
+              <Camera class="w-10 h-10 text-cyan-400/40 mx-auto mb-2" />
+              <p class="text-sm text-slate-300 font-medium">No Scene Presets Captured Yet</p>
+              <p class="text-xs font-mono text-slate-500 mt-1">Set your light strips to your favorite colors and click "Capture Current Scene" to save a 1-click preset.</p>
+            </div>
+          {:else}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {#each groupStore.scenes as s (s.id)}
+                <SceneCard 
+                  scene={s}
+                  onApply={(id) => groupStore.applyScene(id)}
+                  onDelete={(id) => groupStore.deleteScene(id)}
+                />
+              {/each}
+            </div>
+          {/if}
         </div>
 
       {:else if activeTab === 'canvas'}
@@ -259,4 +399,17 @@
   isOpen={isAddModalOpen} 
   onClose={() => isAddModalOpen = false} 
   onAdd={(ip) => store.addManualIP(ip)} 
+/>
+
+<CreateGroupModal
+  isOpen={isCreateGroupModalOpen}
+  allDevices={store.devices}
+  onClose={() => isCreateGroupModalOpen = false}
+  onCreate={(name, desc, ids) => groupStore.createGroup(name, desc, ids)}
+/>
+
+<CaptureSceneModal
+  isOpen={isCaptureSceneModalOpen}
+  onClose={() => isCaptureSceneModalOpen = false}
+  onCapture={(name, icon) => groupStore.captureScene(name, icon)}
 />

@@ -36,6 +36,7 @@ func main() {
 	go hub.Run()
 
 	devMgr := NewDeviceManager(db, wledClient, hub)
+	groupMgr := NewGroupManager(db, wledClient, devMgr, hub)
 	scanner := NewMDNSScanner(db, wledClient, devMgr)
 
 	// Trigger initial mDNS scan
@@ -48,13 +49,13 @@ func main() {
 	// 3. Select Operating Mode (Server vs Desktop App)
 	if *serverMode || os.Getenv("SERVER_MODE") == "1" {
 		log.Println("[Main] Starting in Headless Server Mode...")
-		srv := NewServer(db, wledClient, devMgr, hub, scanner, assets)
+		srv := NewServer(db, wledClient, devMgr, groupMgr, hub, scanner, assets)
 		if err := srv.Start(*port); err != nil {
 			log.Fatalf("[Main] Server failure: %v", err)
 		}
 	} else {
 		log.Println("[Main] Launching Native Wails Desktop Application...")
-		app := NewApp(db, wledClient, devMgr, hub, scanner)
+		app := NewApp(db, wledClient, devMgr, groupMgr, hub, scanner)
 
 		err := wails.Run(&options.App{
 			Title:  "LED Swarm Orchestrator",

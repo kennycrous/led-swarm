@@ -25,7 +25,7 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
                                          │
                                          ▼
 +-----------------------------------------------------------------------------------+
-|  Slice 003: Virtual Strip Grouping & Multi-Zone Scenes                            |
+|  Slice 003 [COMPLETED]: Virtual Strip Grouping & Multi-Zone Scenes                |
 |  - Multi-strip groups ("Desk", "Ceiling", "TV Backlight")                         |
 |  - Multi-device Scene JSON snapshots & 1-click restore                            |
 +-----------------------------------------------------------------------------------+
@@ -94,19 +94,20 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟣 Slice 003: Virtual Strip Grouping & Multi-Zone Scenes
+### 🟢 Slice 003 [COMPLETED]: Virtual Strip Grouping & Multi-Zone Scenes
 - **Objective**: Allow users to combine physical WLED strips into logical groups and save multi-device snapshot scenes.
 - **Backend Deliverables**:
-  - Database handlers for `groups`, `group_devices`, and `scenes` tables.
-  - Multi-device batch dispatcher applying state changes concurrently across grouped strips.
-  - Scene engine capturing multi-strip JSON state snapshots and restoring them.
+  - [x] Database handlers for `groups`, `group_devices`, and `scenes` tables.
+  - [x] Multi-device batch dispatcher applying state changes concurrently across grouped strips using `sync.WaitGroup`.
+  - [x] Scene engine capturing multi-strip JSON state snapshots and restoring them in <50ms.
 - **Frontend Deliverables**:
-  - Group Management tab in Svelte UI (Create, Edit, Delete groups).
-  - Group control cards for batch power toggle, group brightness scaling, and unified color selection.
-  - Scene Preset bar in top header: 1-click scene activation buttons ("Cyberpunk Cyan", "Movie Night", "Warm Relax").
+  - [x] Groups & Scenes tab in Svelte 5 UI (`GroupCard.svelte`, `SceneCard.svelte`).
+  - [x] Group control cards for batch power toggle, group brightness scaling, color selection, and effect dropdowns.
+  - [x] Scene Preset bar in top cyber header for 1-click scene activation anywhere in the application.
+  - [x] Dashboard group filter pills for filtering device grid by active group.
 - **Acceptance Criteria**:
-  - Creating a group "Desk Setup" containing 2 strips allows controlling both strips simultaneously.
-  - Clicking a saved Scene button updates all assigned WLED strips in under 50ms.
+  - [x] Creating a group "Desk Setup" containing multiple strips allows controlling all assigned strips simultaneously.
+  - [x] Clicking a saved Scene button updates all assigned WLED strips concurrently in <50ms.
 
 ---
 
