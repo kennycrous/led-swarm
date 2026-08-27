@@ -1,0 +1,14 @@
+.vscode/settings.json
+  h_e41d77f8309f5c 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "60a5a2ca963100a5288087046e350ef257c486ae",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
