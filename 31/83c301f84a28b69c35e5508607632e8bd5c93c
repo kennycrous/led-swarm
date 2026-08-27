@@ -1,0 +1,24 @@
+backend/src/canvas_manager.go
+  h_e41d77f8309f5c 134-139
+backend/src/db.go
+  h_e41d77f8309f5c 188
+backend/src/device_manager.go
+  h_e41d77f8309f5c 71
+frontend/src/lib/components/CanvasEditor.svelte
+  h_e41d77f8309f5c 315
+frontend/src/lib/components/RoomCard.svelte
+  h_e41d77f8309f5c 41-89,288,290-291,295-298
+frontend/src/lib/stores/canvasStore.svelte.js
+  h_e41d77f8309f5c 21-24,99,103,108-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3183c301f84a28b69c35e5508607632e8bd5c93c",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
