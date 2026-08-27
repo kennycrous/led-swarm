@@ -1,8 +1,38 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
+
+func TestDeviceManager_AddDeviceByIPAndStateMutations(t *testing.T) {
+	ts, mockState := createMockWLEDServer(t)
+	db := setupTestDB(t)
+	hub := NewHub()
+	wledClient := NewWLEDClient()
+
+	dm := NewDeviceManager(db, wledClient, hub)
+
+	// Extract IP from mock server URL
+	host := strings.TrimPrefix(ts.URL, "http://")
+
+	// 1. Add Device By IP against Mock WLED Server
+	dev, err := dm.AddDeviceByIP(host)
+	if err != nil {
+		t.Fatalf("AddDeviceByIP failed: %v", err)
+	}
+	if dev.Name != "Mock WLED Strip" {
+		t.Errorf("Expected Name 'Mock WLED Strip', got '%s'", dev.Name)
+	}
+
+	// 2. Set Device State via wledClient
+	if err := wledClient.SetState(dev.IPAddress, WLEDState{On: false, Brightness: 220}); err != nil {
+		t.Fatalf("SetState failed: %v", err)
+	}
+	if mockState.On != false || mockState.Brightness != 220 {
+		t.Errorf("Expected mock server state updated via wledClient")
+	}
+}
 
 func TestDeviceManager_IPValidationAndRename(t *testing.T) {
 	db := setupTestDB(t)
