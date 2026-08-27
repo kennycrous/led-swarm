@@ -1,6 +1,18 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { Grid, Save, Sparkles, Move, RotateCw, RotateCcw, ZoomIn, ZoomOut, Maximize2, Cpu } from 'lucide-svelte';
+  import {
+    Grid,
+    Save,
+    Sparkles,
+    Move,
+    RotateCw,
+    RotateCcw,
+    ZoomIn,
+    ZoomOut,
+    Maximize2,
+    Cpu,
+    ArrowLeft
+  } from 'lucide-svelte';
 
   let {
     devices = [],
@@ -12,7 +24,8 @@
     onTriggerSweep = () => {},
     onSelectRoom = () => {},
     onCreateRoom = () => {},
-    onDeleteRoom = () => {}
+    onDeleteRoom = () => {},
+    onBackToGroups = () => {}
   } = $props();
 
   let selectedDeviceId = $state(null);
@@ -21,16 +34,36 @@
   let snapToGrid = $state(true);
   let sweepActive = $state(false);
   let sweepTime = $state(0);
-  let isAddRoomOpen = $state(false);
-  let newRoomTitle = $state('');
-
   let animationFrameId = null;
 
-  function handleCreateRoom() {
-    if (!newRoomTitle.trim()) return;
-    onCreateRoom(newRoomTitle.trim());
-    newRoomTitle = '';
-    isAddRoomOpen = false;
+  let currentRoom = $derived(rooms.find((r) => r.id === currentRoomId) || rooms[0] || { title: '2D Room Layout' });
+
+  // Devices belonging to this specific room (or all devices if default/all placed)
+  let roomDevices = $derived.by(() => {
+    const placedDevIds = placements
+      .filter((p) => p.roomId === currentRoomId || (!p.roomId && currentRoomId === 'default'))
+      .map((p) => p.deviceId);
+
+    if (placedDevIds.length === 0 || currentRoomId === 'default') return devices;
+    const filtered = devices.filter((d) => placedDevIds.includes(d.id));
+    return filtered.length > 0 ? filtered : devices;
+  });
+
+  async function handleSaveLayout() {
+    // Record current placements for all roomDevices into store placements array
+    roomDevices.forEach((dev) => {
+      const p = getPlacement(dev.id);
+      onUpdatePlacement(dev.id, {
+        posX: p.posX,
+        posY: p.posY,
+        rotation: p.rotation,
+        scale: p.scale,
+        geometry: p.geometry
+      });
+    });
+
+    await onSavePlacements();
+    onBackToGroups();
   }
 
   // Transient slider angle preview map (degrees readout while dragging)
@@ -218,37 +251,15 @@
     <div>
       <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
         <Grid class="w-6 h-6 text-cyan-400" />
-        2D Room Layout Canvas
+        {currentRoom.title} 2D Layout Canvas
       </h2>
       <p class="text-xs font-mono text-slate-400 mt-1">
-        Interactive 2D room map for dragging, rotating, and mapping physical WLED light strips with live LED color
-        mirroring.
+        Interactive 2D room map for dragging, rotating, and positioning WLED light strips with live pixel mirroring.
       </p>
     </div>
 
     <!-- Controls Toolbar -->
     <div class="flex flex-wrap items-center gap-3">
-      <!-- Multi-Room Selector Dropdown -->
-      <div class="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-2 py-1">
-        <select
-          value={currentRoomId}
-          onchange={(e) => onSelectRoom(e.target.value)}
-          class="bg-transparent font-mono text-xs text-cyan-300 outline-none cursor-pointer"
-        >
-          {#each rooms as room (room.id)}
-            <option value={room.id} class="bg-slate-900 text-slate-100">{room.title}</option>
-          {/each}
-        </select>
-        <button
-          type="button"
-          onclick={() => (isAddRoomOpen = true)}
-          class="rounded-lg bg-cyan-500/20 px-2 py-1 text-xs font-bold text-cyan-300 hover:bg-cyan-500/30"
-          title="Add New 2D Room Canvas"
-        >
-          + Add Room
-        </button>
-      </div>
-
       <!-- Grid Snap Toggle -->
       <button
         type="button"
@@ -258,7 +269,7 @@
           : 'bg-slate-800/80 border-slate-700 text-slate-400'}"
       >
         <Grid class="w-4 h-4" />
-        <span>Snap: {snapToGrid ? 'ON (20px)' : 'OFF'}</span>
+        <span>Snap: {snapToGrid ? 'ON' : 'OFF'}</span>
       </button>
 
       <!-- Reset All Rotations -->
@@ -269,7 +280,7 @@
         title="Reset all strip rotations to 0°"
       >
         <RotateCcw class="w-4 h-4 text-cyan-400" />
-        <span>Reset Rotations</span>
+        <span>Reset</span>
       </button>
 
       <!-- Spatial Sweep Button -->
@@ -282,14 +293,14 @@
         <span>{sweepActive ? 'Sweeping Wave...' : 'Spatial Sweep'}</span>
       </button>
 
-      <!-- Save Placements -->
+      <!-- Save Placements & Return to Groups -->
       <button
         type="button"
-        onclick={onSavePlacements}
-        class="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 font-mono text-xs font-semibold shadow-neonCyan transition-all cursor-pointer"
+        onclick={handleSaveLayout}
+        class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-mono text-xs font-semibold shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
       >
         <Save class="w-4 h-4" />
-        <span>Save Layout</span>
+        <span>Save</span>
       </button>
     </div>
   </div>
@@ -302,11 +313,11 @@
     <!-- Background Canvas Info Watermark -->
     <div class="absolute top-4 left-4 pointer-events-none opacity-40 font-mono text-xs text-cyan-500/60 space-y-1">
       <p>ROOM CANVAS GRID (2000x1200 px)</p>
-      <p>ACTIVE STRIPS: {devices.length}</p>
+      <p>ACTIVE STRIPS: {roomDevices.length}</p>
     </div>
 
     <!-- Placed Strip Elements -->
-    {#each devices as dev (dev.id)}
+    {#each roomDevices as dev (dev.id)}
       {@const p = getPlacement(dev.id)}
       {@const isSelected = selectedDeviceId === dev.id}
       {@const pixelColors = getPixelColors(dev)}
@@ -431,38 +442,3 @@
     {/each}
   </div>
 </div>
-
-{#if isAddRoomOpen}
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="glass-panel w-full max-w-md rounded-2xl border border-cyan-500/30 bg-slate-900/90 p-6 shadow-2xl">
-      <h3 class="text-lg font-bold text-slate-100 mb-2">Create New 2D Room Canvas</h3>
-      <p class="text-xs text-slate-400 mb-4">
-        Give your room layout canvas a title (e.g., Living Room, Office, Bedroom).
-      </p>
-
-      <input
-        type="text"
-        placeholder="Room Canvas Title..."
-        bind:value={newRoomTitle}
-        class="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-slate-100 outline-none focus:border-cyan-400 mb-5"
-      />
-
-      <div class="flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onclick={() => (isAddRoomOpen = false)}
-          class="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onclick={handleCreateRoom}
-          class="rounded-xl bg-cyan-500/20 border border-cyan-500/40 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/30"
-        >
-          Create Room
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}

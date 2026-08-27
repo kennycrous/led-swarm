@@ -9,6 +9,7 @@
     palettes = [],
     isPinned = true,
     cardSize = 'normal',
+    showSizeToggle = false,
     onTogglePower = () => {},
     onSetBrightness = () => {},
     onSetColor = () => {},
@@ -96,16 +97,18 @@
         <div
           class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-purple-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(168,85,247,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
         >
-          <button
-            onclick={() => {
-              onToggleSize(group.id);
-              isMenuOpen = false;
-            }}
-            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-purple-300 hover:bg-purple-500/15 transition-all text-left cursor-pointer"
-          >
-            <Maximize2 class="w-3.5 h-3.5 text-purple-400" />
-            <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
-          </button>
+          {#if showSizeToggle}
+            <button
+              onclick={() => {
+                onToggleSize(group.id);
+                isMenuOpen = false;
+              }}
+              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-purple-300 hover:bg-purple-500/15 transition-all text-left cursor-pointer"
+            >
+              <Maximize2 class="w-3.5 h-3.5 text-purple-400" />
+              <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
+            </button>
+          {/if}
 
           <button
             onclick={() => {

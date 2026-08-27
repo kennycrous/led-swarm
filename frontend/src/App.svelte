@@ -75,6 +75,19 @@
       }
     });
 
+    // Add pinned 2D rooms
+    canvasStore.rooms.forEach((r) => {
+      if (dashboardStore.isPinned(r.id)) {
+        list.push({
+          id: r.id,
+          type: 'room',
+          data: r,
+          size: dashboardStore.getSize(r.id),
+          panelId: dashboardStore.getPanelId(r.id)
+        });
+      }
+    });
+
     // Add pinned scene presets
     groupStore.scenes.forEach((s) => {
       if (dashboardStore.isPinned(s.id)) {
@@ -233,17 +246,6 @@
         >
           <Sliders class="w-4 h-4" />
           <span>Strips & Devices</span>
-        </button>
-
-        <button
-          onclick={() => (activeTab = 'canvas')}
-          class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-mono text-xs transition-all duration-200 cursor-pointer {activeTab ===
-          'canvas'
-            ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'}"
-        >
-          <Grid class="w-4 h-4" />
-          <span>2D Room Canvas</span>
         </button>
 
         <button
@@ -411,6 +413,7 @@
                         palettes={store.palettes}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onTogglePower={(id) => store.togglePower(id)}
                         onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
                         onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
@@ -428,6 +431,7 @@
                         palettes={store.palettes}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onTogglePower={(id, pwr) =>
                           groupStore.setGroupState(
                             id,
@@ -447,6 +451,7 @@
                         scene={item.data}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onApply={(id) => groupStore.applyScene(id)}
                         onDelete={(id) => groupStore.deleteScene(id)}
                         onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
@@ -457,13 +462,18 @@
                         room={item.data}
                         devices={store.devices}
                         placements={canvasStore.placements}
+                        effects={store.effects}
+                        palettes={store.palettes}
                         isPinned={true}
                         cardSize={item.size}
+                        showSizeToggle={true}
                         onEditLayout={() => {
                           canvasStore.selectRoom(item.data.id);
                           activeTab = 'canvas';
                         }}
-                        onTogglePin={() => dashboardStore.togglePin(item.data.id, 'room')}
+                        onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
+                        onToggleSize={(id) => cycleCardSize(id, item.size)}
+                        onDelete={(id) => canvasStore.deleteRoom(id)}
                       />
                     {/if}
                   </div>
@@ -566,6 +576,21 @@
                           onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
                           onToggleSize={(id) => cycleCardSize(id, item.size)}
                         />
+                      {:else if item.type === 'room'}
+                        <RoomCard
+                          room={item.data}
+                          devices={store.devices}
+                          placements={canvasStore.placements}
+                          isPinned={true}
+                          cardSize={item.size}
+                          onEditLayout={() => {
+                            canvasStore.selectRoom(item.data.id);
+                            activeTab = 'canvas';
+                          }}
+                          onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
+                          onToggleSize={(id) => cycleCardSize(id, item.size)}
+                          onDelete={(id) => canvasStore.deleteRoom(id)}
+                        />
                       {/if}
                     </div>
                   {/each}
@@ -594,6 +619,7 @@
           onSelectRoom={(id) => canvasStore.selectRoom(id)}
           onCreateRoom={(title) => canvasStore.createRoom(title)}
           onDeleteRoom={(id) => canvasStore.deleteRoom(id)}
+          onBackToGroups={() => (activeTab = 'groups')}
           onSavePlacements={() => canvasStore.savePlacements()}
           onUpdatePlacement={(id, updates) => canvasStore.updatePlacement(id, updates)}
           onTriggerSweep={() => {
@@ -666,13 +692,17 @@
                   {room}
                   devices={store.devices}
                   placements={canvasStore.placements}
+                  effects={store.effects}
+                  palettes={store.palettes}
                   isPinned={dashboardStore.isPinned(room.id)}
                   cardSize={dashboardStore.getSize(room.id)}
                   onEditLayout={() => {
                     canvasStore.selectRoom(room.id);
                     activeTab = 'canvas';
                   }}
-                  onTogglePin={() => dashboardStore.togglePin(room.id, 'room')}
+                  onTogglePin={(id, type) => dashboardStore.togglePin(id, type)}
+                  onToggleSize={(id) => cycleCardSize(id, dashboardStore.getSize(room.id))}
+                  onDelete={(id) => canvasStore.deleteRoom(id)}
                 />
               {/each}
             </div>

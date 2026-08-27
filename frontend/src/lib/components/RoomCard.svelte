@@ -1,15 +1,37 @@
 <script>
-  import { LayoutGrid, Edit3, Power, Sun, Pin, PinOff, Trash2 } from 'lucide-svelte';
+  import { LayoutGrid, Power, Sun, Palette, Sparkles, Pin, Maximize2, MoreVertical, Trash2 } from 'lucide-svelte';
+  import CyberSelect from './CyberSelect.svelte';
 
   let {
     room = { id: 'default', title: 'Main Room Canvas', width: 2000, height: 1200 },
     devices = [],
     placements = [],
+    effects = [],
+    palettes = [],
     isPinned = true,
     cardSize = 'normal',
+    showSizeToggle = false,
     onEditLayout = () => {},
-    onTogglePin = () => {}
+    onTogglePin = () => {},
+    onToggleSize = () => {},
+    onDelete = null
   } = $props();
+
+  let isMenuOpen = $state(false);
+  let roomPower = $state(true);
+  let roomBrightness = $state(200);
+  let selectedColor = $state('#06b6d4');
+  let selectedEffect = $state(0);
+  let selectedPalette = $state(0);
+
+  const presetColors = [
+    { name: 'Cyan Neon', hex: '#06b6d4', r: 6, g: 182, b: 212 },
+    { name: 'Magenta Glow', hex: '#a855f7', r: 168, g: 85, b: 247 },
+    { name: 'Cyber Amber', hex: '#f59e0b', r: 245, g: 158, b: 11 },
+    { name: 'Void White', hex: '#ffffff', r: 255, g: 255, b: 255 },
+    { name: 'Emerald Online', hex: '#10b981', r: 16, g: 185, b: 129 },
+    { name: 'Crimson Red', hex: '#ef4444', r: 239, g: 68, b: 68 }
+  ];
 
   // Filter placements for this room
   let roomPlacements = $derived(
@@ -18,16 +40,13 @@
 
   // Devices in this room
   let roomDevices = $derived(devices.filter((dev) => roomPlacements.some((p) => p.deviceId === dev.id)));
+  let onlineCount = $derived(roomDevices.filter((d) => d.isOnline).length);
 
   let isAnyOn = $derived(roomDevices.some((d) => d.state?.on));
-  let avgBri = $derived(
-    roomDevices.length > 0
-      ? Math.round(roomDevices.reduce((sum, d) => sum + (d.state?.bri || 0), 0) / roomDevices.length)
-      : 255
-  );
 
   function toggleRoomPower() {
     const nextOn = !isAnyOn;
+    roomPower = nextOn;
     roomDevices.forEach((dev) => {
       if (dev && dev.isOnline) {
         fetch('/api/v1/devices/state', {
@@ -44,6 +63,7 @@
 
   function handleBriChange(e) {
     const val = Number(e.target.value);
+    roomBrightness = val;
     roomDevices.forEach((dev) => {
       if (dev && dev.isOnline) {
         fetch('/api/v1/devices/state', {
@@ -57,41 +77,159 @@
       }
     });
   }
+
+  function applyColor(c) {
+    selectedColor = c.hex;
+    roomDevices.forEach((dev) => {
+      if (dev && dev.isOnline) {
+        fetch('/api/v1/devices/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ip: dev.ipAddress,
+            state: { seg: [{ id: 0, col: [[c.r, c.g, c.b]] }] }
+          })
+        }).catch(() => {});
+      }
+    });
+  }
+
+  function handleEffectChange(fxId) {
+    selectedEffect = fxId;
+    roomDevices.forEach((dev) => {
+      if (dev && dev.isOnline) {
+        fetch('/api/v1/devices/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ip: dev.ipAddress,
+            state: { seg: [{ id: 0, fx: fxId }] }
+          })
+        }).catch(() => {});
+      }
+    });
+  }
+
+  function handlePaletteChange(palId) {
+    selectedPalette = palId;
+    if (selectedEffect === 0) selectedEffect = 2;
+    roomDevices.forEach((dev) => {
+      if (dev && dev.isOnline) {
+        fetch('/api/v1/devices/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ip: dev.ipAddress,
+            state: { seg: [{ id: 0, pal: palId, fx: selectedEffect || 2 }] }
+          })
+        }).catch(() => {});
+      }
+    });
+  }
 </script>
 
 <div
-  class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-cyan-500/20 bg-slate-900/65 p-5 backdrop-blur-xl transition-all duration-300 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)]"
+  class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full transition-all duration-300 {isMenuOpen
+    ? 'z-50'
+    : 'hover:z-30 z-10'} border-cyan-500/20 hover:border-cyan-500/40"
 >
-  <!-- Card Header -->
-  <div class="flex items-start justify-between">
-    <div class="flex items-center gap-3">
-      <div
-        class="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-950/40 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
-      >
-        <LayoutGrid class="h-5 w-5" />
+  <!-- Top Accent Status Pill Bar -->
+  <div class="w-full h-1 rounded-full bg-gradient-to-r from-purple-500 via-cyan-500 to-amber-500"></div>
+
+  <!-- FUNCTIONAL ROOM HEADER & OPTIONS MENU -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2 flex-1">
+      <div class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+        <LayoutGrid class="w-4 h-4" />
       </div>
       <div>
-        <h3 class="font-semibold text-slate-100">{room.title}</h3>
-        <p class="text-xs text-slate-400">{roomDevices.length} strips placed • 2D Canvas</p>
+        <h3 class="font-semibold text-slate-100 text-sm tracking-wide">{room.title}</h3>
+        <p class="text-[11px] font-mono text-slate-400">
+          {roomDevices.length} Strips ({onlineCount} Online)
+        </p>
       </div>
     </div>
 
-    <!-- Pin Toggle Button -->
-    <button
-      onclick={onTogglePin}
-      class="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-400"
-      title={isPinned ? 'Unpin from dashboard' : 'Pin to dashboard'}
-    >
-      {#if isPinned}
-        <Pin class="h-4 w-4 text-cyan-400" />
-      {:else}
-        <PinOff class="h-4 w-4" />
+    <!-- Power, Options Menu & Controls -->
+    <div class="flex items-center gap-1.5 relative">
+      <button
+        onclick={toggleRoomPower}
+        class="p-2.5 rounded-xl transition-all duration-200 {isAnyOn
+          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan'
+          : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
+        title="Toggle Room Power"
+      >
+        <Power class="w-4 h-4" />
+      </button>
+
+      <!-- Card Options Dropdown Trigger -->
+      <button
+        onclick={() => (isMenuOpen = !isMenuOpen)}
+        class="p-2.5 rounded-xl bg-[#090e17]/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all cursor-pointer"
+        title="Card Options"
+      >
+        <MoreVertical class="w-4 h-4" />
+      </button>
+
+      <!-- Glassmorphic Cyber Context Dropdown Menu -->
+      {#if isMenuOpen}
+        <div
+          class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-cyan-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
+        >
+          <button
+            onclick={() => {
+              onEditLayout(room.id);
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-cyan-300 hover:bg-cyan-500/15 transition-all text-left cursor-pointer"
+          >
+            <LayoutGrid class="w-3.5 h-3.5 text-cyan-400" />
+            <span>Edit 2D Layout</span>
+          </button>
+
+          {#if showSizeToggle}
+            <button
+              onclick={() => {
+                onToggleSize(room.id);
+                isMenuOpen = false;
+              }}
+              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-cyan-300 hover:bg-cyan-500/15 transition-all text-left cursor-pointer"
+            >
+              <Maximize2 class="w-3.5 h-3.5 text-cyan-400" />
+              <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
+            </button>
+          {/if}
+
+          <button
+            onclick={() => {
+              onTogglePin(room.id, 'room');
+              isMenuOpen = false;
+            }}
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-cyan-300 hover:bg-cyan-500/15 transition-all text-left cursor-pointer"
+          >
+            <Pin class="w-3.5 h-3.5 text-cyan-400" />
+            <span>{isPinned ? 'Unpin from Canvas' : 'Pin to Dashboard'}</span>
+          </button>
+
+          {#if onDelete}
+            <button
+              onclick={() => {
+                onDelete(room.id);
+                isMenuOpen = false;
+              }}
+              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-500/15 transition-all text-left cursor-pointer border-t border-slate-800/80 mt-1 pt-1.5"
+            >
+              <Trash2 class="w-3.5 h-3.5 text-rose-400" />
+              <span>Delete Room</span>
+            </button>
+          {/if}
+        </div>
       {/if}
-    </button>
+    </div>
   </div>
 
   <!-- Mini 2D Room Canvas Preview Grid -->
-  <div class="relative my-4 h-32 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#06090e] p-2">
+  <div class="relative my-2 h-28 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#06090e] p-2">
     <!-- Background Grid Lines -->
     <div
       class="absolute inset-0 bg-[linear-gradient(to_right,rgba(56,189,248,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(56,189,248,0.05)_1px,transparent_1px)] bg-[size:16px_16px]"
@@ -121,39 +259,79 @@
     {/each}
   </div>
 
-  <!-- Quick Room Controls & Footer -->
-  <div class="flex items-center justify-between gap-3 pt-2">
-    <!-- Master Room Power Toggle -->
-    <button
-      onclick={toggleRoomPower}
-      class="flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all duration-200 {isAnyOn
-        ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
-        : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'}"
-    >
-      <Power class="h-3.5 w-3.5 {isAnyOn ? 'text-emerald-400 animate-pulse' : ''}" />
-      <span>{isAnyOn ? 'Room ON' : 'Room OFF'}</span>
-    </button>
+  <!-- Mode, Color, Brightness & Palette Controls -->
+  <div class="space-y-3 pt-1">
+    <!-- Quick Color Swatches & Indicator -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        {#each presetColors as c (c.hex)}
+          <button
+            onclick={() => applyColor(c)}
+            style="background-color: {c.hex}"
+            class="w-5 h-5 rounded-md border border-slate-900 shadow-sm transition-transform hover:scale-110 focus:outline-none cursor-pointer"
+            title={c.name}
+          ></button>
+        {/each}
+      </div>
 
-    <!-- Master Room Brightness Slider -->
-    <div class="flex flex-1 items-center gap-2 px-2">
-      <Sun class="h-3.5 w-3.5 text-slate-400" />
+      <!-- Color Indicator -->
+      <div
+        style="background-color: {selectedColor}"
+        class="w-6 h-6 rounded-lg border border-cyan-500/40 shadow-neonCyan"
+      ></div>
+    </div>
+
+    <!-- Room Brightness Slider -->
+    <div class="flex items-center gap-3 bg-[#090e17]/60 px-3 py-1.5 rounded-xl border border-slate-800/80 h-9">
+      <Sun class="w-4 h-4 text-cyan-400" />
       <input
         type="range"
         min="0"
         max="255"
-        value={avgBri}
-        onchange={handleBriChange}
-        class="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-800 accent-cyan-400"
+        value={roomBrightness}
+        oninput={handleBriChange}
+        disabled={!isAnyOn}
+        class="flex-1 accent-cyan-400 cursor-pointer disabled:opacity-30"
+      />
+      <span class="text-xs font-mono text-cyan-300 w-8 text-right">
+        {roomBrightness}
+      </span>
+    </div>
+
+    <!-- Custom Glassmorphic CyberSelect Dropdowns -->
+    <div class="grid grid-cols-2 gap-2">
+      <!-- FX CyberSelect -->
+      <CyberSelect
+        value={selectedEffect}
+        options={effects}
+        icon={Sparkles}
+        iconColor="text-cyan-400"
+        hoverBorder="hover:border-cyan-500/40"
+        onChange={handleEffectChange}
+      />
+
+      <!-- Palette CyberSelect -->
+      <CyberSelect
+        value={selectedPalette}
+        options={palettes}
+        icon={Palette}
+        iconColor="text-purple-400"
+        hoverBorder="hover:border-purple-500/40"
+        onChange={handlePaletteChange}
       />
     </div>
 
-    <!-- Edit 2D Layout Button -->
-    <button
-      onclick={onEditLayout}
-      class="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-950/30 px-3 py-1.5 text-xs font-semibold text-cyan-300 transition-all duration-200 hover:border-cyan-400 hover:bg-cyan-900/40 hover:text-cyan-200 shadow-sm"
-    >
-      <Edit3 class="h-3.5 w-3.5" />
-      <span>Edit 2D Layout</span>
-    </button>
+    <!-- Action Controls Footer -->
+    <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/60">
+      <span class="text-[11px] font-mono text-slate-400">2D Room Canvas</span>
+      <button
+        type="button"
+        onclick={() => onEditLayout(room.id)}
+        class="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-3 py-1.5 font-mono text-xs font-semibold text-cyan-300 transition-all duration-200 hover:border-cyan-400 hover:bg-cyan-900/50 hover:text-cyan-200 cursor-pointer shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+      >
+        <LayoutGrid class="h-3.5 w-3.5" />
+        <span>Edit 2D Layout</span>
+      </button>
+    </div>
   </div>
 </div>

@@ -14,7 +14,7 @@ describe('CanvasEditor.svelte', () => {
       onSavePlacements: () => {}
     });
 
-    expect(getByText('2D Room Layout Canvas')).toBeDefined();
+    expect(getByText('Main Room Canvas 2D Layout Canvas')).toBeDefined();
     expect(getByText('Desk Strip')).toBeDefined();
   });
 });
