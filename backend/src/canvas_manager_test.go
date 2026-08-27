@@ -100,3 +100,38 @@ func TestCanvasManager_RoomsAndPlacements(t *testing.T) {
 		t.Fatalf("DeleteRoom failed: %v", err)
 	}
 }
+
+func TestCanvasManager_PersistenceAcrossRestart(t *testing.T) {
+	db := setupTestDB(t)
+	hub := NewHub()
+
+	cm1 := NewCanvasManager(db, hub)
+	room, err := cm1.CreateRoom("Bedroom", "Bed backlighting", 2000, 1200, []string{"wled-b1"})
+	if err != nil {
+		t.Fatalf("CreateRoom failed: %v", err)
+	}
+
+	p1 := CanvasPlacement{DeviceID: "wled-b1", RoomID: room.ID, PosX: 450, PosY: 350, Rotation: 180, Scale: 1, Geometry: "strip"}
+	if err := cm1.BatchSavePlacements(room.ID, []CanvasPlacement{p1}); err != nil {
+		t.Fatalf("BatchSavePlacements failed: %v", err)
+	}
+
+	// Now simulate server restart by creating a new CanvasManager connected to the same DB
+	cm2 := NewCanvasManager(db, hub)
+
+	rooms := cm2.GetRooms()
+	if len(rooms) != 1 {
+		t.Fatalf("Expected 1 room after restart, got %d", len(rooms))
+	}
+	if rooms[0].Title != "Bedroom" {
+		t.Errorf("Expected room title 'Bedroom', got '%s'", rooms[0].Title)
+	}
+
+	placements := cm2.GetPlacementsForRoom(room.ID)
+	if len(placements) != 1 {
+		t.Fatalf("Expected 1 placement after restart for room %s, got %d", room.ID, len(placements))
+	}
+	if placements[0].PosX != 450 || placements[0].Rotation != 180 {
+		t.Errorf("Unexpected placement data after restart: %+v", placements[0])
+	}
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sort"
 	"sync"
 
 	"github.com/google/uuid"
@@ -102,10 +103,9 @@ func (cm *CanvasManager) GetRooms() []CanvasRoom {
 	for _, r := range cm.rooms {
 		res = append(res, r)
 	}
-	if len(res) == 0 {
-		// Provide default room if empty
-		res = append(res, CanvasRoom{ID: "default", Title: "Main Room Canvas", Width: 2000, Height: 1200})
-	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].CreatedAt < res[j].CreatedAt || (res[i].CreatedAt == res[j].CreatedAt && res[i].ID < res[j].ID)
+	})
 	return res
 }
 
@@ -140,7 +140,7 @@ func (cm *CanvasManager) GetPlacementsForRoom(roomID string) []CanvasPlacement {
 	}
 
 	for _, p := range cm.placements {
-		if p.RoomID == roomID || (roomID == "default" && (p.RoomID == "" || p.RoomID == "default")) {
+		if p.RoomID == roomID {
 			res = append(res, p)
 		}
 	}

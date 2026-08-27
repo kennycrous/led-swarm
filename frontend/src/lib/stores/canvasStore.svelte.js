@@ -5,9 +5,34 @@ function getWailsApp() {
   return null;
 }
 
+function normalizeRoom(r) {
+  if (!r) return null;
+  return {
+    id: r.id || r.ID || '',
+    title: r.title || r.Title || 'Room',
+    description: r.description || r.Description || '',
+    width: r.width || r.Width || 2000,
+    height: r.height || r.Height || 1200,
+    createdAt: r.createdAt || r.CreatedAt || ''
+  };
+}
+
+function normalizePlacement(p) {
+  if (!p) return null;
+  return {
+    deviceId: p.deviceId || p.DeviceID || '',
+    roomId: p.roomId || p.RoomID || '',
+    posX: p.posX ?? p.PosX ?? 100,
+    posY: p.posY ?? p.PosY ?? 100,
+    rotation: p.rotation ?? p.Rotation ?? 0,
+    scale: p.scale ?? p.Scale ?? 1.0,
+    geometry: p.geometry || p.Geometry || 'strip'
+  };
+}
+
 class CanvasStore {
-  rooms = $state([{ id: 'default', title: 'Main Room Canvas', width: 2000, height: 1200 }]);
-  currentRoomId = $state('default');
+  rooms = $state([]);
+  currentRoomId = $state(null);
   placements = $state([]);
   isSaving = $state(false);
   sweepActive = $state(false);
@@ -20,6 +45,8 @@ class CanvasStore {
     await this.fetchRooms();
     if (this.rooms.length > 0) {
       this.currentRoomId = this.rooms[0].id;
+    } else {
+      this.currentRoomId = null;
     }
     await this.fetchPlacements();
   }
@@ -27,17 +54,20 @@ class CanvasStore {
   async fetchRooms() {
     try {
       const wailsApp = getWailsApp();
+      let rawData = null;
       if (wailsApp && typeof wailsApp.GetCanvasRooms === 'function') {
-        const data = await wailsApp.GetCanvasRooms();
-        if (data && data.length > 0) this.rooms = data;
-        return;
+        rawData = await wailsApp.GetCanvasRooms();
+      } else {
+        const res = await fetch('/api/v1/canvas/rooms');
+        if (res.ok) rawData = await res.json();
       }
 
-      const res = await fetch('/api/v1/canvas/rooms');
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          this.rooms = data;
+      if (Array.isArray(rawData)) {
+        this.rooms = rawData.map(normalizeRoom).filter(Boolean);
+        if (this.rooms.length > 0 && !this.rooms.some((r) => r.id === this.currentRoomId)) {
+          this.currentRoomId = this.rooms[0].id;
+        } else if (this.rooms.length === 0) {
+          this.currentRoomId = null;
         }
       }
     } catch (err) {
@@ -48,22 +78,23 @@ class CanvasStore {
   async createRoom(title, description = '', deviceIds = [], width = 2000, height = 1200) {
     try {
       const wailsApp = getWailsApp();
-      let newRoom = null;
+      let rawRoom = null;
       if (wailsApp && typeof wailsApp.CreateCanvasRoom === 'function') {
-        newRoom = await wailsApp.CreateCanvasRoom(title, description, width, height, deviceIds);
+        rawRoom = await wailsApp.CreateCanvasRoom(title, description, width, height, deviceIds);
       } else {
         const res = await fetch('/api/v1/canvas/rooms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title, description, width, height, deviceIds })
         });
-        if (res.ok) newRoom = await res.json();
+        if (res.ok) rawRoom = await res.json();
       }
 
+      const newRoom = normalizeRoom(rawRoom);
       if (newRoom) {
-        this.rooms = [...this.rooms, newRoom];
+        this.rooms = [...this.rooms.filter((r) => r.id !== newRoom.id), newRoom];
         this.currentRoomId = newRoom.id;
-        await this.fetchPlacements(newRoom.id);
+        await this.fetchPlacements();
       }
       return newRoom;
     } catch (err) {
@@ -72,7 +103,6 @@ class CanvasStore {
   }
 
   async deleteRoom(id) {
-    if (id === 'default') return;
     try {
       const wailsApp = getWailsApp();
       if (wailsApp && typeof wailsApp.DeleteCanvasRoom === 'function') {
@@ -82,9 +112,9 @@ class CanvasStore {
       }
 
       this.rooms = this.rooms.filter((r) => r.id !== id);
+      this.placements = this.placements.filter((p) => p.roomId !== id);
       if (this.currentRoomId === id) {
-        this.currentRoomId = this.rooms[0]?.id || 'default';
-        await this.fetchPlacements(this.currentRoomId);
+        this.currentRoomId = this.rooms[0]?.id || null;
       }
     } catch (err) {
       console.error('[CanvasStore] Error deleting room:', err);
@@ -99,30 +129,22 @@ class CanvasStore {
   async fetchPlacements(roomId = '') {
     try {
       const wailsApp = getWailsApp();
+      let rawData = null;
       if (wailsApp && typeof wailsApp.GetCanvasPlacements === 'function') {
-        const data = await wailsApp.GetCanvasPlacements(roomId || '');
-        if (data) {
-          if (!roomId) {
-            this.placements = data;
-          } else {
-            const otherPlacements = this.placements.filter((p) => p.roomId !== roomId);
-            this.placements = [...otherPlacements, ...data];
-          }
-        }
-        return;
+        rawData = await wailsApp.GetCanvasPlacements(roomId || '');
+      } else {
+        const url = roomId ? `/api/v1/canvas/placements?roomId=${roomId}` : '/api/v1/canvas/placements';
+        const res = await fetch(url);
+        if (res.ok) rawData = await res.json();
       }
 
-      const url = roomId ? `/api/v1/canvas/placements?roomId=${roomId}` : '/api/v1/canvas/placements';
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          if (!roomId) {
-            this.placements = data;
-          } else {
-            const otherPlacements = this.placements.filter((p) => p.roomId !== roomId);
-            this.placements = [...otherPlacements, ...data];
-          }
+      if (Array.isArray(rawData)) {
+        const normalized = rawData.map(normalizePlacement).filter(Boolean);
+        if (!roomId) {
+          this.placements = normalized;
+        } else {
+          const otherPlacements = this.placements.filter((p) => p.roomId !== roomId);
+          this.placements = [...otherPlacements, ...normalized];
         }
       }
     } catch (err) {
@@ -131,9 +153,8 @@ class CanvasStore {
   }
 
   updatePlacement(deviceId, updates) {
-    const idx = this.placements.findIndex(
-      (p) => p.deviceId === deviceId && (p.roomId === this.currentRoomId || !p.roomId)
-    );
+    if (!this.currentRoomId) return;
+    const idx = this.placements.findIndex((p) => p.deviceId === deviceId && p.roomId === this.currentRoomId);
     if (idx !== -1) {
       this.placements[idx] = { ...this.placements[idx], ...updates, roomId: this.currentRoomId };
     } else {
@@ -153,10 +174,11 @@ class CanvasStore {
   }
 
   async savePlacements() {
+    if (!this.currentRoomId) return;
     this.isSaving = true;
     try {
       const roomPlacements = this.placements
-        .filter((p) => p.roomId === this.currentRoomId || (!p.roomId && this.currentRoomId === 'default'))
+        .filter((p) => p.roomId === this.currentRoomId)
         .map((p) => ({ ...p, roomId: this.currentRoomId }));
 
       const payload = {
@@ -190,7 +212,6 @@ class CanvasStore {
 }
 
 let instance = null;
-
 export function getCanvasStore() {
   if (!instance) {
     instance = new CanvasStore();

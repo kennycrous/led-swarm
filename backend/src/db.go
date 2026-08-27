@@ -135,8 +135,7 @@ func (d *Database) initSchema() error {
 		rotation REAL NOT NULL DEFAULT 0.0,
 		scale REAL NOT NULL DEFAULT 1.0,
 		geometry TEXT DEFAULT 'strip',
-		PRIMARY KEY (device_id, room_id),
-		FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+		PRIMARY KEY (device_id, room_id)
 	);
 
 	CREATE TABLE IF NOT EXISTS scenes (
@@ -171,6 +170,34 @@ func (d *Database) initSchema() error {
 	_, err := d.db.Exec(query)
 	if err != nil {
 		return err
+	}
+
+	// Auto-migrate pre-existing databases created before Slice 006 (where room_id column did not exist in canvas_placements)
+	var hasRoomId int
+	_ = d.db.QueryRow("SELECT COUNT(*) FROM pragma_table_info('canvas_placements') WHERE name='room_id'").Scan(&hasRoomId)
+	if hasRoomId == 0 {
+		log.Println("[DB] Migrating schema: adding room_id column to canvas_placements table...")
+		migration := `
+		CREATE TABLE IF NOT EXISTS canvas_placements_v2 (
+			device_id TEXT NOT NULL,
+			room_id TEXT NOT NULL DEFAULT 'default',
+			pos_x REAL NOT NULL DEFAULT 100.0,
+			pos_y REAL NOT NULL DEFAULT 100.0,
+			rotation REAL NOT NULL DEFAULT 0.0,
+			scale REAL NOT NULL DEFAULT 1.0,
+			geometry TEXT DEFAULT 'strip',
+			PRIMARY KEY (device_id, room_id)
+		);
+		INSERT OR IGNORE INTO canvas_placements_v2 (device_id, room_id, pos_x, pos_y, rotation, scale, geometry)
+		SELECT device_id, 'default', pos_x, pos_y, rotation, scale, geometry FROM canvas_placements;
+		DROP TABLE canvas_placements;
+		ALTER TABLE canvas_placements_v2 RENAME TO canvas_placements;
+		`
+		if _, migErr := d.db.Exec(migration); migErr != nil {
+			log.Printf("[DB] Schema migration warning: %v", migErr)
+		} else {
+			log.Println("[DB] Schema migration completed successfully: canvas_placements updated with room_id")
+		}
 	}
 
 	log.Println("[DB] SQLite database schema initialized successfully")
@@ -593,6 +620,11 @@ func (d *Database) SaveCanvasPlacement(p CanvasPlacement) error {
 		p.Scale = 1.0
 	}
 
+	// Ensure device row exists in devices table so foreign key constraints never fail
+	if p.DeviceID != "" {
+		_, _ = d.db.Exec("INSERT OR IGNORE INTO devices (id, name, ip_address) VALUES (?, ?, ?)", p.DeviceID, p.DeviceID, "127.0.0.1")
+	}
+
 	query := `
 	INSERT INTO canvas_placements (device_id, room_id, pos_x, pos_y, rotation, scale, geometry)
 	VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -604,6 +636,9 @@ func (d *Database) SaveCanvasPlacement(p CanvasPlacement) error {
 		geometry = excluded.geometry;
 	`
 	_, err := d.db.Exec(query, p.DeviceID, p.RoomID, p.PosX, p.PosY, p.Rotation, p.Scale, p.Geometry)
+	if err != nil {
+		log.Printf("[DB] ERROR saving placement dev=%s room=%s: %v", p.DeviceID, p.RoomID, err)
+	}
 	return err
 }
 

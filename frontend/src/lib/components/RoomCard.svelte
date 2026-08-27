@@ -34,9 +34,7 @@
   ];
 
   // Filter placements for this room
-  let roomPlacements = $derived(
-    placements.filter((p) => p.roomId === room.id || (room.id === 'default' && (!p.roomId || p.roomId === 'default')))
-  );
+  let roomPlacements = $derived(placements.filter((p) => p.roomId === room.id));
 
   // Compute auto-centered & scaled preview coordinates for room placements
   let previewPlacements = $derived.by(() => {

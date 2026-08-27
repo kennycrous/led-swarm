@@ -10,11 +10,13 @@ describe('CanvasEditor.svelte', () => {
   it('renders canvas editor header and room grid', () => {
     const { getByText } = render(CanvasEditor, {
       devices: mockDevices,
-      placements: mockPlacements,
+      placements: mockPlacements.map((p) => ({ ...p, roomId: 'room-1' })),
+      rooms: [{ id: 'room-1', title: 'Living Room', width: 2000, height: 1200 }],
+      currentRoomId: 'room-1',
       onSavePlacements: () => {}
     });
 
-    expect(getByText('Main Room Canvas 2D Layout Canvas')).toBeDefined();
+    expect(getByText('Living Room 2D Layout Canvas')).toBeDefined();
     expect(getByText('Desk Strip')).toBeDefined();
   });
 });

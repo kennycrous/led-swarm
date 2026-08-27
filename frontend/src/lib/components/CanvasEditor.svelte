@@ -17,8 +17,8 @@
   let {
     devices = [],
     placements = [],
-    rooms = [{ id: 'default', title: 'Main Room Canvas', width: 2000, height: 1200 }],
-    currentRoomId = 'default',
+    rooms = [],
+    currentRoomId = null,
     onSavePlacements = () => {},
     onUpdatePlacement = () => {},
     onTriggerSweep = () => {},
@@ -36,15 +36,16 @@
   let sweepTime = $state(0);
   let animationFrameId = null;
 
-  let currentRoom = $derived(rooms.find((r) => r.id === currentRoomId) || rooms[0] || { title: '2D Room Layout' });
+  let currentRoom = $derived(
+    rooms.find((r) => r.id === currentRoomId) || { title: '2D Room Layout', width: 2000, height: 1200 }
+  );
 
-  // Devices belonging to this specific room (or all devices if default/all placed)
+  // Devices belonging to this specific room
   let roomDevices = $derived.by(() => {
-    const placedDevIds = placements
-      .filter((p) => p.roomId === currentRoomId || (!p.roomId && currentRoomId === 'default'))
-      .map((p) => p.deviceId);
+    if (!currentRoomId) return devices;
+    const placedDevIds = placements.filter((p) => p.roomId === currentRoomId).map((p) => p.deviceId);
 
-    if (placedDevIds.length === 0 || currentRoomId === 'default') return devices;
+    if (placedDevIds.length === 0) return devices;
     const filtered = devices.filter((d) => placedDevIds.includes(d.id));
     return filtered.length > 0 ? filtered : devices;
   });

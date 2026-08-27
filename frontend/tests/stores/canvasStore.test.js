@@ -28,7 +28,10 @@ describe('canvasStore', () => {
 
   it('should update placement position optimistically', () => {
     const store = getCanvasStore();
-    store.placements = [{ deviceId: 'wled-1', posX: 100, posY: 100, rotation: 0, scale: 1, geometry: 'strip' }];
+    store.currentRoomId = 'test-room';
+    store.placements = [
+      { deviceId: 'wled-1', roomId: 'test-room', posX: 100, posY: 100, rotation: 0, scale: 1, geometry: 'strip' }
+    ];
 
     store.updatePlacement('wled-1', { posX: 250, posY: 350 });
 
