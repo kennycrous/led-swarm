@@ -15,11 +15,12 @@ type App struct {
 	groupMgr     *GroupManager
 	dashboardMgr *DashboardManager
 	canvasMgr    *CanvasManager
+	ddpStreamer  *DDPStreamer
 	hub          *Hub
 	scanner      *MDNSScanner
 }
 
-func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, hub *Hub, scanner *MDNSScanner) *App {
+func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, ddpStreamer *DDPStreamer, hub *Hub, scanner *MDNSScanner) *App {
 	return &App{
 		db:           db,
 		wledClient:   wledClient,
@@ -27,6 +28,7 @@ func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMg
 		groupMgr:     groupMgr,
 		dashboardMgr: dashboardMgr,
 		canvasMgr:    canvasMgr,
+		ddpStreamer:  ddpStreamer,
 		hub:          hub,
 		scanner:      scanner,
 	}
@@ -211,4 +213,24 @@ func (a *App) SaveCanvasPlacement(placement CanvasPlacement) error {
 
 func (a *App) BatchSaveCanvasPlacements(roomID string, placements []CanvasPlacement) error {
 	return a.canvasMgr.BatchSavePlacements(roomID, placements)
+}
+
+func (a *App) StartDDPStream(targetType string, targetID string, effect string, speed float64, intensity float64, ips []string, ledCount int) DDPTargetStatus {
+	if targetType == "" {
+		targetType = "global"
+		targetID = "all"
+	}
+	return a.ddpStreamer.StartStream(targetType, targetID, effect, speed, intensity, ips, ledCount)
+}
+
+func (a *App) StopDDPStream(targetType string, targetID string) DDPTargetStatus {
+	if targetType == "" {
+		targetType = "global"
+		targetID = "all"
+	}
+	return a.ddpStreamer.StopStream(targetType, targetID)
+}
+
+func (a *App) GetDDPStatus() map[string]DDPTargetStatus {
+	return a.ddpStreamer.GetStatus()
 }

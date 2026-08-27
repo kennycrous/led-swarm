@@ -174,16 +174,17 @@ class CanvasStore {
   }
 
   updatePlacement(deviceId, updates) {
-    if (!this.currentRoomId) return;
-    const idx = this.placements.findIndex((p) => p.deviceId === deviceId && p.roomId === this.currentRoomId);
+    const roomId = this.currentRoomId || (this.rooms.length > 0 ? this.rooms[0].id : 'default');
+    const idx = this.placements.findIndex((p) => p.deviceId === deviceId && p.roomId === roomId);
     if (idx !== -1) {
-      this.placements[idx] = { ...this.placements[idx], ...updates, roomId: this.currentRoomId };
+      const updated = { ...this.placements[idx], ...updates, roomId };
+      this.placements = this.placements.map((p, i) => (i === idx ? updated : p));
     } else {
       this.placements = [
         ...this.placements,
         {
           deviceId,
-          roomId: this.currentRoomId,
+          roomId,
           posX: updates.posX ?? 100,
           posY: updates.posY ?? 100,
           rotation: updates.rotation ?? 0,

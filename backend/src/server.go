@@ -18,12 +18,13 @@ type Server struct {
 	groupMgr     *GroupManager
 	dashboardMgr *DashboardManager
 	canvasMgr    *CanvasManager
+	ddpStreamer  *DDPStreamer
 	hub          *Hub
 	scanner      *MDNSScanner
 	distFS       embed.FS
 }
 
-func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, hub *Hub, scanner *MDNSScanner, distFS embed.FS) *Server {
+func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, ddpStreamer *DDPStreamer, hub *Hub, scanner *MDNSScanner, distFS embed.FS) *Server {
 	return &Server{
 		db:           db,
 		wledClient:   wledClient,
@@ -31,6 +32,7 @@ func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, grou
 		groupMgr:     groupMgr,
 		dashboardMgr: dashboardMgr,
 		canvasMgr:    canvasMgr,
+		ddpStreamer:  ddpStreamer,
 		hub:          hub,
 		scanner:      scanner,
 		distFS:       distFS,
@@ -76,6 +78,11 @@ func (s *Server) Start(port int) error {
 	mux.HandleFunc("/api/v1/canvas/placements", s.handleCanvasPlacements)
 	mux.HandleFunc("/api/v1/canvas/placement", s.handleSaveCanvasPlacement)
 	mux.HandleFunc("/api/v1/canvas/placements/batch", s.handleBatchSaveCanvasPlacements)
+
+	// DDP Streamer API Endpoints
+	mux.HandleFunc("/api/v1/ddp/start", s.handleDDPStart)
+	mux.HandleFunc("/api/v1/ddp/stop", s.handleDDPStop)
+	mux.HandleFunc("/api/v1/ddp/status", s.handleDDPStatus)
 
 	mux.HandleFunc("/api/v1/ws", s.hub.ServeWS)
 
@@ -648,4 +655,63 @@ func (s *Server) handleRenamePanel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(panel)
+}
+
+func (s *Server) handleDDPStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		TargetType string   `json:"targetType"`
+		TargetID   string   `json:"targetID"`
+		Effect     string   `json:"effect"`
+		Speed      float64  `json:"speed"`
+		Intensity  float64  `json:"intensity"`
+		LEDCount   int      `json:"ledCount"`
+		IPs        []string `json:"ips"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid DDP parameters", http.StatusBadRequest)
+		return
+	}
+
+	if req.TargetType == "" {
+		req.TargetType = "global"
+		req.TargetID = "all"
+	}
+
+	status := s.ddpStreamer.StartStream(req.TargetType, req.TargetID, req.Effect, req.Speed, req.Intensity, req.IPs, req.LEDCount)
+	json.NewEncoder(w).Encode(status)
+}
+
+func (s *Server) handleDDPStop(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		TargetType string `json:"targetType"`
+		TargetID   string `json:"targetID"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+
+	if req.TargetType == "" {
+		req.TargetType = "global"
+		req.TargetID = "all"
+	}
+
+	status := s.ddpStreamer.StopStream(req.TargetType, req.TargetID)
+	json.NewEncoder(w).Encode(status)
+}
+
+func (s *Server) handleDDPStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	json.NewEncoder(w).Encode(s.ddpStreamer.GetStatus())
 }

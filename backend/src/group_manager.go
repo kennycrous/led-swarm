@@ -138,6 +138,16 @@ func (gm *GroupManager) GetGroups() []Group {
 	return result
 }
 
+func (gm *GroupManager) GetGroupByID(id string) *Group {
+	gm.mu.RLock()
+	defer gm.mu.RUnlock()
+	if g, ok := gm.groups[id]; ok {
+		gCopy := *g
+		return &gCopy
+	}
+	return nil
+}
+
 // SetGroupState dispatches state payload concurrently across all devices in group
 func (gm *GroupManager) SetGroupState(groupID string, rawState json.RawMessage) error {
 	gm.mu.RLock()

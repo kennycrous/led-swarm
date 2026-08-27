@@ -16,9 +16,10 @@ func TestApp_WailsBindings(t *testing.T) {
 	groupMgr := NewGroupManager(db, wledClient, devMgr, hub)
 	dashboardMgr := NewDashboardManager(db, hub)
 	canvasMgr := NewCanvasManager(db, hub)
+	ddpStreamer := NewDDPStreamer()
 	devMgr.SetDashboardManager(dashboardMgr)
 
-	app := NewApp(db, wledClient, devMgr, groupMgr, dashboardMgr, canvasMgr, hub, nil)
+	app := NewApp(db, wledClient, devMgr, groupMgr, dashboardMgr, canvasMgr, ddpStreamer, hub, nil)
 	app.startup(context.Background())
 
 	host := strings.TrimPrefix(ts.URL, "http://")
