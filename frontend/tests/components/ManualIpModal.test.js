@@ -3,32 +3,30 @@ import { render, fireEvent } from '@testing-library/svelte';
 import ManualIpModal from '../../src/lib/components/ManualIpModal.svelte';
 
 describe('ManualIpModal.svelte', () => {
-  it('renders modal header and input', () => {
-    const { getByText, getByPlaceholderText } = render(ManualIpModal, {
-      props: {
-        isOpen: true
-      }
+  it('renders modal when isOpen is true', () => {
+    const { getByText } = render(ManualIpModal, {
+      isOpen: true,
+      onClose: () => {},
+      onAdd: () => {}
     });
 
-    expect(getByText('Add WLED Strip Manually')).toBeDefined();
-    expect(getByPlaceholderText('192.168.1.100')).toBeDefined();
+    expect(getByText('Add WLED Device by IP')).toBeDefined();
   });
 
-  it('submits entered IP address when form is submitted', async () => {
-    const handleSubmit = vi.fn();
+  it('submits typed IP address', async () => {
+    const onAdd = vi.fn().mockResolvedValue({});
     const { getByPlaceholderText, getByText } = render(ManualIpModal, {
-      props: {
-        isOpen: true,
-        onAdd: handleSubmit
-      }
+      isOpen: true,
+      onClose: () => {},
+      onAdd
     });
 
-    const input = getByPlaceholderText('192.168.1.100');
+    const input = getByPlaceholderText('192.168.1.150');
     await fireEvent.input(input, { target: { value: '192.168.1.175' } });
 
-    const submitBtn = getByText('Connect Strip');
+    const submitBtn = getByText('ADD DEVICE');
     await fireEvent.click(submitBtn);
 
-    expect(handleSubmit).toHaveBeenCalledWith('192.168.1.175');
+    expect(onAdd).toHaveBeenCalledWith('192.168.1.175');
   });
 });

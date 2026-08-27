@@ -7,31 +7,28 @@ describe('SceneCard.svelte', () => {
     id: 'scene-1',
     name: 'Cyberpunk Neon',
     icon: 'Sparkles',
-    createdAt: '2026-08-27'
+    configJson: '{}'
   };
 
   it('renders scene name and icon', () => {
     const { getByText } = render(SceneCard, {
-      props: {
-        scene: mockScene
-      }
+      scene: mockScene
     });
 
     expect(getByText('Cyberpunk Neon')).toBeDefined();
+    expect(getByText('Apply Scene Snapshot')).toBeDefined();
   });
 
   it('triggers onApply when Apply Scene button is clicked', async () => {
-    const handleApply = vi.fn();
+    const onApply = vi.fn();
     const { getByText } = render(SceneCard, {
-      props: {
-        scene: mockScene,
-        onApply: handleApply
-      }
+      scene: mockScene,
+      onApply
     });
 
-    const applyBtn = getByText('Apply Scene');
+    const applyBtn = getByText('Apply Scene Snapshot');
     await fireEvent.click(applyBtn);
 
-    expect(handleApply).toHaveBeenCalledWith('scene-1');
+    expect(onApply).toHaveBeenCalledWith('scene-1');
   });
 });

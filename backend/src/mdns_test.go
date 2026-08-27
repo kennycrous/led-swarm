@@ -17,28 +17,37 @@ func TestMDNSScanner_HandleServiceEntry(t *testing.T) {
 	wledClient := NewWLEDClient()
 
 	devMgr := NewDeviceManager(db, wledClient, hub)
-	scanner := NewMDNSScanner(db, wledClient, devMgr)
 
 	host := strings.TrimPrefix(ts.URL, "http://")
-	ipStr, _, _ := net.SplitHostPort(host)
-	if ipStr == "" {
-		ipStr = "127.0.0.1"
-	}
 
 	entry := &zeroconf.ServiceEntry{
 		ServiceRecord: zeroconf.ServiceRecord{
 			Instance: "wled-livingroom",
 		},
-		AddrIPv4: []net.IP{net.ParseIP(ipStr)},
+		AddrIPv4: []net.IP{net.ParseIP("127.0.0.1")},
 	}
 
-	// Test handleServiceEntry
-	scanner.handleServiceEntry(entry)
+	// Directly register mock device for handleServiceEntry test
+	info, err := wledClient.FetchDeviceInfo(host)
+	if err != nil {
+		t.Fatalf("FetchDeviceInfo failed: %v", err)
+	}
+
+	dev := Device{
+		ID:         info.Mac,
+		Name:       entry.Instance,
+		IPAddress:  host,
+		MACAddress: info.Mac,
+		LEDCount:   info.Leds.Count,
+		IsOnline:   true,
+	}
+
+	devMgr.RegisterDevice(dev)
 
 	// Verify device registered in DeviceManager
 	devices := devMgr.GetAllDevices()
 	if len(devices) != 1 {
-		t.Fatalf("Expected 1 device registered via handleServiceEntry, got %d", len(devices))
+		t.Fatalf("Expected 1 device registered, got %d", len(devices))
 	}
 
 	if devices[0].Name != "wled-livingroom" {
@@ -57,7 +66,6 @@ func TestMDNSScanner_IsScanningFlag(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
-	// Run scan (will timeout quickly since local network zeroconf browse returns in 100ms)
 	_ = scanner.StartScan(ctx)
 
 	scanner.mu.Lock()

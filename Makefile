@@ -1,4 +1,4 @@
-.PHONY: all dev-backend dev-frontend dev-desktop build build-frontend build-backend test test-backend test-frontend lint lint-backend lint-frontend fmt clean help
+.PHONY: all dev-backend dev-frontend dev-desktop build build-frontend build-backend test test-backend test-frontend lint lint-backend lint-frontend fmt ensure-dist clean help
 
 # Default target
 all: build
@@ -41,6 +41,11 @@ build-backend: build-frontend
 ## build: Full build (frontend assets + backend static server binary)
 build: build-backend
 
+## ensure-dist: Ensures frontend dist assets exist before running backend Go tests/vet
+ensure-dist:
+	@mkdir -p backend/src/dist
+	@if [ ! -f backend/src/dist/index.html ]; then $(MAKE) build-frontend; fi
+
 ## fmt: Automatically format Go backend and Svelte/JS frontend files (removes trailing whitespace)
 fmt:
 	@echo "==> Formatting Go backend code (go fmt)..."
@@ -48,8 +53,8 @@ fmt:
 	@echo "==> Formatting Svelte and JS frontend code (Prettier)..."
 	cd frontend && npm run format
 
-## test-backend: Run backend Go unit tests (ensures frontend assets built first)
-test-backend: build-frontend
+## test-backend: Run backend Go unit tests
+test-backend: ensure-dist
 	@echo "==> Running Go backend unit tests..."
 	cd backend && go test -v ./src/...
 
@@ -61,8 +66,8 @@ test-frontend:
 ## test: Run all backend and frontend unit tests
 test: test-backend test-frontend
 
-## lint-backend: Run Go static code analysis (go vet, ensures frontend assets built first)
-lint-backend: build-frontend
+## lint-backend: Run Go static code analysis (go vet)
+lint-backend: ensure-dist
 	@echo "==> Running Go static analysis (go vet)..."
 	cd backend && go vet ./src/...
 

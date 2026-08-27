@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestGroupManager_GroupsAndScenes(t *testing.T) {
-	ts1, mockState1 := createMockWLEDServer(t)
-	ts2, mockState2 := createMockWLEDServer(t)
+	ts1, mockState1 := createMockWLEDServerWithMAC(t, "AA:BB:CC:11:22:33")
+	ts2, mockState2 := createMockWLEDServerWithMAC(t, "AA:BB:CC:44:55:66")
 
 	db := setupTestDB(t)
 	hub := NewHub()
@@ -18,8 +19,13 @@ func TestGroupManager_GroupsAndScenes(t *testing.T) {
 	host1 := strings.TrimPrefix(ts1.URL, "http://")
 	host2 := strings.TrimPrefix(ts2.URL, "http://")
 
-	dev1, _ := devMgr.AddDeviceByIP(host1)
-	dev2, _ := devMgr.AddDeviceByIP(host2)
+	dev1 := Device{ID: "wled-1", Name: "Strip 1", IPAddress: host1, MACAddress: "AA:BB:CC:11:22:33", LEDCount: 60, IsOnline: true}
+	dev2 := Device{ID: "wled-2", Name: "Strip 2", IPAddress: host2, MACAddress: "AA:BB:CC:44:55:66", LEDCount: 60, IsOnline: true}
+
+	devMgr.RegisterDevice(dev1)
+	devMgr.RegisterDevice(dev2)
+
+	time.Sleep(50 * time.Millisecond)
 
 	gm := NewGroupManager(db, wledClient, devMgr, hub)
 

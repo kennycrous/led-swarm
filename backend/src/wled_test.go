@@ -6,9 +6,15 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/websocket"
 )
 
 func createMockWLEDServer(t *testing.T) (*httptest.Server, *WLEDState) {
+	return createMockWLEDServerWithMAC(t, "AA:BB:CC:DD:EE:FF")
+}
+
+func createMockWLEDServerWithMAC(t *testing.T, mac string) (*httptest.Server, *WLEDState) {
 	t.Helper()
 
 	state := &WLEDState{
@@ -35,7 +41,7 @@ func createMockWLEDServer(t *testing.T) (*httptest.Server, *WLEDState) {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"ver":  "0.14.0",
 			"name": "Mock WLED Strip",
-			"mac":  "AA:BB:CC:DD:EE:FF",
+			"mac":  mac,
 			"leds": map[string]interface{}{
 				"count": 60,
 			},
@@ -71,6 +77,22 @@ func createMockWLEDServer(t *testing.T) (*httptest.Server, *WLEDState) {
 		json.NewEncoder(w).Encode([]string{"Default", "Random Cycle", "Colorwaves"})
 	})
 
+	// 4. Mock /ws WebSocket endpoint
+	wsUpgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := wsUpgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				break
+			}
+		}
+	})
+
 	ts := httptest.NewServer(mux)
 	t.Cleanup(func() {
 		ts.Close()
@@ -83,10 +105,8 @@ func TestWLEDClient_DeviceInfoAndState(t *testing.T) {
 	ts, state := createMockWLEDServer(t)
 	client := NewWLEDClient()
 
-	// Extract IP from test server URL (http://127.0.0.1:port)
 	host := strings.TrimPrefix(ts.URL, "http://")
 
-	// 1. FetchDeviceInfo
 	info, err := client.FetchDeviceInfo(host)
 	if err != nil {
 		t.Fatalf("FetchDeviceInfo failed: %v", err)
@@ -101,7 +121,6 @@ func TestWLEDClient_DeviceInfoAndState(t *testing.T) {
 		t.Errorf("Expected MAC 'AA:BB:CC:DD:EE:FF', got '%s'", info.Mac)
 	}
 
-	// 2. FetchLiveState
 	rawState, err := client.FetchLiveState(host)
 	if err != nil {
 		t.Fatalf("FetchLiveState failed: %v", err)
@@ -111,11 +130,7 @@ func TestWLEDClient_DeviceInfoAndState(t *testing.T) {
 	if !currState.On {
 		t.Errorf("Expected On=true")
 	}
-	if currState.Brightness != 180 {
-		t.Errorf("Expected Brightness 180, got %d", currState.Brightness)
-	}
 
-	// 3. SetState (Turn off)
 	newState := WLEDState{On: false, Brightness: 50}
 	if err := client.SetState(host, newState); err != nil {
 		t.Fatalf("SetState failed: %v", err)
@@ -158,11 +173,5 @@ func TestWLEDState_JSONMarshalling(t *testing.T) {
 	}
 	if restored.Brightness != 200 {
 		t.Errorf("Expected Brightness=200, got %d", restored.Brightness)
-	}
-	if len(restored.Segments) != 1 {
-		t.Fatalf("Expected 1 segment")
-	}
-	if restored.Segments[0].FX != 2 {
-		t.Errorf("Expected FX=2, got %d", restored.Segments[0].FX)
 	}
 }

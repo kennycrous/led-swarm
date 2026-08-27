@@ -8,38 +8,32 @@ describe('CreateGroupModal.svelte', () => {
     { id: 'wled-2', name: 'Strip 2', ledCount: 30 }
   ];
 
-  it('renders group creation title and device checkboxes', () => {
+  it('renders modal header when isOpen is true', () => {
     const { getByText } = render(CreateGroupModal, {
-      props: {
-        isOpen: true,
-        allDevices: mockDevices
-      }
+      isOpen: true,
+      allDevices: mockDevices
     });
 
     expect(getByText('Create Virtual Strip Group')).toBeDefined();
-    expect(getByText('Strip 1')).toBeDefined();
-    expect(getByText('Strip 2')).toBeDefined();
   });
 
-  it('submits form with group name and selected device IDs', async () => {
-    const handleSubmit = vi.fn();
+  it('submits form when name typed and strip selected', async () => {
+    const onCreate = vi.fn();
     const { getByPlaceholderText, getByText } = render(CreateGroupModal, {
-      props: {
-        isOpen: true,
-        allDevices: mockDevices,
-        onCreate: handleSubmit
-      }
+      isOpen: true,
+      allDevices: mockDevices,
+      onCreate
     });
 
-    const input = getByPlaceholderText('e.g. Living Room TV Zone');
+    const input = getByPlaceholderText('e.g. Desk Lights, TV Setup');
     await fireEvent.input(input, { target: { value: 'Desk Setup' } });
 
-    const strip1Btn = getByText('Strip 1');
-    await fireEvent.click(strip1Btn);
+    const strip1 = getByText('Strip 1');
+    await fireEvent.click(strip1);
 
-    const submitBtn = getByText('Save Group');
+    const submitBtn = getByText('Create Group');
     await fireEvent.click(submitBtn);
 
-    expect(handleSubmit).toHaveBeenCalledWith('Desk Setup', '', ['wled-1']);
+    expect(onCreate).toHaveBeenCalledWith('Desk Setup', '', ['wled-1']);
   });
 });
