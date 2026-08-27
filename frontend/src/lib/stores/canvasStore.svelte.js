@@ -101,7 +101,14 @@ class CanvasStore {
       const wailsApp = getWailsApp();
       if (wailsApp && typeof wailsApp.GetCanvasPlacements === 'function') {
         const data = await wailsApp.GetCanvasPlacements(roomId || '');
-        if (data) this.placements = data;
+        if (data) {
+          if (!roomId) {
+            this.placements = data;
+          } else {
+            const otherPlacements = this.placements.filter((p) => p.roomId !== roomId);
+            this.placements = [...otherPlacements, ...data];
+          }
+        }
         return;
       }
 
@@ -110,7 +117,12 @@ class CanvasStore {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          this.placements = data;
+          if (!roomId) {
+            this.placements = data;
+          } else {
+            const otherPlacements = this.placements.filter((p) => p.roomId !== roomId);
+            this.placements = [...otherPlacements, ...data];
+          }
         }
       }
     } catch (err) {
@@ -143,9 +155,13 @@ class CanvasStore {
   async savePlacements() {
     this.isSaving = true;
     try {
+      const roomPlacements = this.placements
+        .filter((p) => p.roomId === this.currentRoomId || (!p.roomId && this.currentRoomId === 'default'))
+        .map((p) => ({ ...p, roomId: this.currentRoomId }));
+
       const payload = {
         roomId: this.currentRoomId,
-        placements: this.placements.map((p) => ({ ...p, roomId: this.currentRoomId }))
+        placements: roomPlacements
       };
 
       const wailsApp = getWailsApp();

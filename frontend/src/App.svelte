@@ -45,6 +45,17 @@
   const dashboardStore = getDashboardStore();
   const canvasStore = getCanvasStore();
 
+  onMount(async () => {
+    try {
+      if (typeof store.init === 'function') await store.init();
+      if (typeof groupStore.init === 'function') await groupStore.init();
+      if (typeof dashboardStore.init === 'function') await dashboardStore.init();
+      if (typeof canvasStore.init === 'function') await canvasStore.init();
+    } catch (err) {
+      console.warn('[App] Error initializing stores on mount:', err);
+    }
+  });
+
   let activeTab = $state('dashboard');
   let masterPower = $state(true);
   let masterBrightness = $state(200);
