@@ -1,0 +1,16 @@
+.docs/architecture.md
+  h_e41d77f8309f5c 1-224
+AGENTS.md
+  h_e41d77f8309f5c 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f097f4f3f6474a50e0cca88695bf93ec48f577c6",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
