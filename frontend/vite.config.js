@@ -9,6 +9,15 @@ export default defineConfig({
       '$lib': path.resolve('./src/lib')
     }
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        ws: true
+      }
+    }
+  },
   build: {
     outDir: '../backend/src/dist',
     emptyOutDir: true

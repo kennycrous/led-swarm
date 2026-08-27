@@ -10,58 +10,32 @@
     RefreshCw, 
     Wifi, 
     Power, 
-    Activity 
+    Activity,
+    Plus
   } from 'lucide-svelte';
+  import { getDeviceStore } from '$lib/stores/deviceStore.svelte.js';
+  import DeviceCard from '$lib/components/DeviceCard.svelte';
+  import ManualIpModal from '$lib/components/ManualIpModal.svelte';
+
+  const store = getDeviceStore();
 
   let activeTab = $state('dashboard');
-  let isScanning = $state(false);
   let masterPower = $state(true);
-  let masterBrightness = $state(180);
+  let masterBrightness = $state(200);
+  let isAddModalOpen = $state(false);
 
-  let devices = $state([
-    {
-      id: 'wled-desk-01',
-      name: 'Desk Ambient Strip',
-      ipAddress: '192.168.1.105',
-      ledCount: 144,
-      isOnline: true,
-      state: { on: true, bri: 200 }
-    },
-    {
-      id: 'wled-ceiling-02',
-      name: 'Ceiling Matrix Cove',
-      ipAddress: '192.168.1.112',
-      ledCount: 300,
-      isOnline: true,
-      state: { on: true, bri: 150 }
-    },
-    {
-      id: 'wled-tv-03',
-      name: 'OLED Backlight',
-      ipAddress: '192.168.1.120',
-      ledCount: 60,
-      isOnline: false,
-      state: { on: false, bri: 0 }
-    }
-  ]);
+  onMount(() => {
+    store.init();
+  });
 
-  async function triggerScan() {
-    isScanning = true;
-    try {
-      await fetch('/api/v1/scan', { method: 'POST' });
-    } catch (e) {
-      console.log('Scan triggered (local demo mode)');
-    }
-    setTimeout(() => {
-      isScanning = false;
-    }, 3000);
+  function toggleMasterPower() {
+    masterPower = !masterPower;
+    store.devices.filter(d => d.isOnline).forEach(d => store.togglePower(d.id));
   }
 
-  function toggleDevicePower(id) {
-    const dev = devices.find(d => d.id === id);
-    if (dev) {
-      dev.state.on = !dev.state.on;
-    }
+  function handleMasterBrightness(val) {
+    masterBrightness = val;
+    store.devices.filter(d => d.isOnline).forEach(d => store.setBrightness(d.id, val));
   }
 </script>
 
@@ -128,12 +102,12 @@
           LED SWARM ORCHESTRATOR
         </h1>
         <span class="px-2 py-0.5 text-[10px] font-mono tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full">
-          v0.1.0-CYBER
+          v0.2.0-LIVE
         </span>
       </div>
 
-      <!-- Master Control Controls -->
-      <div class="flex items-center gap-6">
+      <!-- Master Swarm Controls -->
+      <div class="flex items-center gap-4">
         <!-- Master Brightness -->
         <div class="flex items-center gap-3 bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl">
           <span class="text-xs text-slate-400 font-mono">BRI</span>
@@ -141,25 +115,35 @@
             type="range" 
             min="0" 
             max="255" 
-            bind:value={masterBrightness} 
-            class="w-28 accent-cyan-400 cursor-pointer"
+            value={masterBrightness}
+            oninput={(e) => handleMasterBrightness(parseInt(e.target.value))}
+            class="w-24 accent-cyan-400 cursor-pointer"
           />
           <span class="text-xs text-cyan-400 font-mono w-8 text-right">{masterBrightness}</span>
         </div>
 
+        <!-- Add IP Button -->
+        <button 
+          onclick={() => isAddModalOpen = true}
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono hover:bg-purple-500/20 hover:border-purple-400 transition-all duration-200"
+        >
+          <Plus class="w-3.5 h-3.5" />
+          ADD IP
+        </button>
+
         <!-- mDNS Scan Button -->
         <button 
-          onclick={triggerScan}
-          disabled={isScanning}
+          onclick={() => store.triggerScan()}
+          disabled={store.isScanning}
           class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono hover:bg-cyan-500/20 hover:border-cyan-400 transition-all duration-200 disabled:opacity-50"
         >
-          <RefreshCw class="w-3.5 h-3.5 {isScanning ? 'animate-spin text-cyan-400' : ''}" />
-          {isScanning ? 'SCANNING...' : 'DISCOVER STREAMS'}
+          <RefreshCw class="w-3.5 h-3.5 {store.isScanning ? 'animate-spin text-cyan-400' : ''}" />
+          {store.isScanning ? 'SCANNING...' : 'DISCOVER STREAMS'}
         </button>
 
         <!-- Master Power -->
         <button 
-          onclick={() => masterPower = !masterPower}
+          onclick={toggleMasterPower}
           class="p-2 rounded-xl border transition-all duration-200 {masterPower ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 glow-cyan' : 'bg-slate-900/60 text-slate-500 border-slate-800'}"
           title="Master Swarm Power"
         >
@@ -178,7 +162,7 @@
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
               <div>
                 <p class="text-xs font-mono text-slate-400">TOTAL DEVICES</p>
-                <p class="text-2xl font-bold text-cyan-400 mt-1 font-mono">{devices.length}</p>
+                <p class="text-2xl font-bold text-cyan-400 mt-1 font-mono">{store.devices.length}</p>
               </div>
               <Wifi class="w-8 h-8 text-cyan-500/30" />
             </div>
@@ -187,7 +171,7 @@
               <div>
                 <p class="text-xs font-mono text-slate-400">ACTIVE LEDS</p>
                 <p class="text-2xl font-bold text-purple-400 mt-1 font-mono">
-                  {devices.reduce((acc, d) => acc + (d.state.on ? d.ledCount : 0), 0)}
+                  {store.devices.reduce((acc, d) => acc + (d.state?.on ? d.ledCount : 0), 0)}
                 </p>
               </div>
               <Activity class="w-8 h-8 text-purple-500/30" />
@@ -195,16 +179,20 @@
 
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
               <div>
-                <p class="text-xs font-mono text-slate-400">DDP STREAM FPS</p>
-                <p class="text-2xl font-bold text-emerald-400 mt-1 font-mono">60 FPS</p>
+                <p class="text-xs font-mono text-slate-400">ONLINE STATUS</p>
+                <p class="text-2xl font-bold text-emerald-400 mt-1 font-mono">
+                  {store.devices.filter(d => d.isOnline).length} / {store.devices.length}
+                </p>
               </div>
               <Zap class="w-8 h-8 text-emerald-500/30" />
             </div>
 
             <div class="glass-panel p-4 rounded-2xl flex items-center justify-between">
               <div>
-                <p class="text-xs font-mono text-slate-400">NETWORK SYNC</p>
-                <p class="text-2xl font-bold text-amber-400 mt-1 font-mono">2.1 ms</p>
+                <p class="text-xs font-mono text-slate-400">REALTIME SYNC</p>
+                <p class="text-2xl font-bold text-amber-400 mt-1 font-mono">
+                  {store.isConnected ? 'LIVE WS' : 'REST'}
+                </p>
               </div>
               <Radio class="w-8 h-8 text-amber-500/30" />
             </div>
@@ -212,55 +200,36 @@
 
           <!-- Devices Grid -->
           <div class="space-y-4">
-            <h2 class="text-sm font-mono tracking-wider text-slate-400 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              DISCOVERED WLED STRIPS
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {#each devices as dev}
-                <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4 relative overflow-hidden group">
-                  
-                  <!-- Glowing Accent Line -->
-                  <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r {dev.isOnline ? 'from-cyan-500 to-purple-500' : 'from-slate-700 to-slate-800'}"></div>
-
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-semibold text-slate-100 group-hover:text-cyan-300 transition-colors">
-                        {dev.name}
-                      </h3>
-                      <p class="text-xs font-mono text-slate-400 mt-0.5">{dev.ipAddress} • {dev.ledCount} LEDs</p>
-                    </div>
-
-                    <button 
-                      onclick={() => toggleDevicePower(dev.id)}
-                      class="p-2 rounded-xl transition-all duration-200 {dev.state.on ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan' : 'bg-slate-900/60 text-slate-600 border border-slate-800'}"
-                    >
-                      <Power class="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <!-- Live Canvas Mirror Thumbnail Placeholder -->
-                  <div class="h-16 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center justify-center p-2 relative">
-                    <div class="w-full h-2 rounded-full bg-gradient-to-r {dev.state.on ? 'from-cyan-500 via-purple-500 to-amber-500 shadow-neonCyan' : 'from-slate-800 to-slate-900'}"></div>
-                  </div>
-
-                  <!-- Brightness Slider -->
-                  <div class="flex items-center gap-3">
-                    <span class="text-[10px] font-mono text-slate-400">BRI</span>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="255" 
-                      bind:value={dev.state.bri}
-                      disabled={!dev.state.on}
-                      class="flex-1 accent-purple-400 cursor-pointer disabled:opacity-30"
-                    />
-                    <span class="text-xs font-mono text-purple-300 w-8 text-right">{dev.state.bri}</span>
-                  </div>
-                </div>
-              {/each}
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-mono tracking-wider text-slate-400 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                DISCOVERED WLED STRIPS ({store.devices.length})
+              </h2>
             </div>
+
+            {#if store.devices.length === 0}
+              <div class="glass-panel rounded-3xl p-12 text-center border border-dashed border-cyan-500/20">
+                <Wifi class="w-12 h-12 text-cyan-500/40 mx-auto mb-3 animate-pulse" />
+                <h3 class="text-base font-bold text-slate-200">No WLED Devices Found Yet</h3>
+                <p class="text-xs font-mono text-slate-500 mt-1">Click "DISCOVER STREAMS" to scan mDNS (_wled._tcp) or click "ADD IP" to add manually.</p>
+              </div>
+            {:else}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {#each store.devices as dev (dev.id)}
+                  <DeviceCard 
+                    device={dev}
+                    effects={store.effects}
+                    palettes={store.palettes}
+                    onTogglePower={(id) => store.togglePower(id)}
+                    onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
+                    onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
+                    onSetEffect={(id, fx) => store.setEffect(id, fx)}
+                    onSetPalette={(id, pal) => store.setPalette(id, pal)}
+                    onRename={(id, name) => store.renameDevice(id, name)}
+                  />
+                {/each}
+              </div>
+            {/if}
           </div>
         </div>
 
@@ -285,3 +254,9 @@
     </main>
   </div>
 </div>
+
+<ManualIpModal 
+  isOpen={isAddModalOpen} 
+  onClose={() => isAddModalOpen = false} 
+  onAdd={(ip) => store.addManualIP(ip)} 
+/>
