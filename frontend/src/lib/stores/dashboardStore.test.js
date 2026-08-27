@@ -15,7 +15,7 @@ describe('dashboardStore', () => {
 
   it('should add a custom panel', async () => {
     await store.addPanel('Living Room Zone');
-    const panel = store.panels.find(p => p.title === 'Living Room Zone');
+    const panel = store.panels.find((p) => p.title === 'Living Room Zone');
     expect(panel).toBeDefined();
     expect(panel.title).toBe('Living Room Zone');
   });
@@ -42,11 +42,11 @@ describe('dashboardStore', () => {
 
   it('should delete a custom panel', async () => {
     await store.addPanel('Temporary Panel');
-    const added = store.panels.find(p => p.title === 'Temporary Panel');
+    const added = store.panels.find((p) => p.title === 'Temporary Panel');
     expect(added).toBeDefined();
 
     await store.deletePanel(added.id);
-    const deleted = store.panels.find(p => p.id === added.id);
+    const deleted = store.panels.find((p) => p.id === added.id);
     expect(deleted).toBeUndefined();
   });
 });

@@ -32,8 +32,8 @@ type DashboardItem struct {
 	ItemID    string `json:"itemId"`
 	ItemType  string `json:"itemType"` // "device", "group", "scene"
 	Position  int    `json:"position"`
-	Size      string `json:"size"`     // "compact", "normal", "wide"
-	PanelID   string `json:"panelId"`  // "default" or custom panel id
+	Size      string `json:"size"`    // "compact", "normal", "wide"
+	PanelID   string `json:"panelId"` // "default" or custom panel id
 	IsPinned  bool   `json:"isPinned"`
 	CreatedAt string `json:"createdAt"`
 }

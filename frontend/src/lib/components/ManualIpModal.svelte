@@ -34,10 +34,7 @@
           <Wifi class="w-5 h-5 text-cyan-400" />
           <h3 class="font-bold text-slate-100">Add WLED Device by IP</h3>
         </div>
-        <button 
-          onclick={onClose}
-          class="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-        >
+        <button onclick={onClose} class="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
           <X class="w-5 h-5" />
         </button>
       </div>
@@ -45,9 +42,9 @@
       <form onsubmit={handleSubmit} class="mt-4 space-y-4">
         <div>
           <label for="wled-ip-input" class="block text-xs font-mono text-slate-400 mb-1.5">WLED IP ADDRESS</label>
-          <input 
+          <input
             id="wled-ip-input"
-            type="text" 
+            type="text"
             placeholder="192.168.1.150"
             bind:value={ipInput}
             class="w-full px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-slate-100 font-mono text-sm focus:outline-none focus:border-cyan-500/60"
@@ -59,15 +56,15 @@
         {/if}
 
         <div class="flex justify-end gap-3 pt-2">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onclick={onClose}
             class="px-4 py-2 rounded-xl text-xs font-mono border border-slate-800 text-slate-400 hover:bg-slate-800/50"
           >
             CANCEL
           </button>
 
-          <button 
+          <button
             type="submit"
             disabled={isSubmitting || !ipInput.trim()}
             class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold shadow-lg shadow-cyan-500/20 hover:opacity-90 disabled:opacity-50"

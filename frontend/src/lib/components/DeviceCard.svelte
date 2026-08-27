@@ -2,17 +2,17 @@
   import { Power, Edit2, Check, Palette, Sparkles, Sun, Pin, Maximize2, Cpu, MoreVertical } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
-  let { 
-    device, 
-    effects = [], 
-    palettes = [], 
+  let {
+    device,
+    effects = [],
+    palettes = [],
     isPinned = true,
     cardSize = 'normal',
-    onTogglePower = () => {}, 
-    onSetBrightness = () => {}, 
-    onSetColor = () => {}, 
-    onSetEffect = () => {}, 
-    onSetPalette = () => {}, 
+    onTogglePower = () => {},
+    onSetBrightness = () => {},
+    onSetColor = () => {},
+    onSetEffect = () => {},
+    onSetPalette = () => {},
     onRename = () => {},
     onTogglePin = () => {},
     onToggleSize = () => {}
@@ -50,10 +50,19 @@
   }
 </script>
 
-<div class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full transition-all duration-300 {isMenuOpen ? 'z-50' : 'hover:z-30 z-10'} {device.isOnline ? 'border-cyan-500/20 hover:border-cyan-500/50' : 'border-rose-500/20 opacity-75'}">
-  
+<div
+  class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full transition-all duration-300 {isMenuOpen
+    ? 'z-50'
+    : 'hover:z-30 z-10'} {device.isOnline
+    ? 'border-cyan-500/20 hover:border-cyan-500/50'
+    : 'border-rose-500/20 opacity-75'}"
+>
   <!-- Top Accent Status Pill Bar (Sits cleanly inside card padding) -->
-  <div class="w-full h-1 rounded-full bg-gradient-to-r {device.isOnline ? 'from-cyan-500 via-purple-500 to-amber-500' : 'from-rose-600 to-rose-900'}"></div>
+  <div
+    class="w-full h-1 rounded-full bg-gradient-to-r {device.isOnline
+      ? 'from-cyan-500 via-purple-500 to-amber-500'
+      : 'from-rose-600 to-rose-900'}"
+  ></div>
 
   <!-- FUNCTIONAL DEVICE HEADER & OPTIONS MENU -->
   <div class="flex items-center justify-between">
@@ -64,8 +73,8 @@
       <div>
         {#if isEditingName}
           <div class="flex items-center gap-1">
-            <input 
-              type="text" 
+            <input
+              type="text"
               bind:value={nickname}
               class="bg-[#090e17] border border-cyan-500/50 rounded-lg px-2 py-0.5 text-xs text-slate-100 font-semibold focus:outline-none"
             />
@@ -78,7 +87,10 @@
             <h3 class="font-semibold text-slate-100 group-hover:text-cyan-300 transition-colors text-sm">
               {device.name}
             </h3>
-            <button onclick={startEditing} class="opacity-0 group-hover/edit:opacity-100 p-0.5 text-slate-500 hover:text-slate-300">
+            <button
+              onclick={startEditing}
+              class="opacity-0 group-hover/edit:opacity-100 p-0.5 text-slate-500 hover:text-slate-300"
+            >
               <Edit2 class="w-3 h-3" />
             </button>
           </div>
@@ -91,17 +103,19 @@
 
     <!-- Power & Card Options Menu -->
     <div class="flex items-center gap-1.5 relative">
-      <button 
+      <button
         onclick={() => onTogglePower(device.id)}
-        class="p-2.5 rounded-xl transition-all duration-200 {device.state?.on ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan' : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
+        class="p-2.5 rounded-xl transition-all duration-200 {device.state?.on
+          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan'
+          : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
         title="Toggle Power"
       >
         <Power class="w-4 h-4" />
       </button>
 
       <!-- Card Options Dropdown Trigger -->
-      <button 
-        onclick={() => isMenuOpen = !isMenuOpen}
+      <button
+        onclick={() => (isMenuOpen = !isMenuOpen)}
         class="p-2.5 rounded-xl bg-[#090e17]/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all cursor-pointer"
         title="Card Options"
       >
@@ -110,10 +124,10 @@
 
       <!-- Glassmorphic Cyber Context Dropdown Menu -->
       {#if isMenuOpen}
-        <div 
+        <div
           class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-cyan-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
         >
-          <button 
+          <button
             onclick={() => {
               onToggleSize(device.id);
               isMenuOpen = false;
@@ -124,7 +138,7 @@
             <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
           </button>
 
-          <button 
+          <button
             onclick={() => {
               onTogglePin(device.id, 'device');
               isMenuOpen = false;
@@ -145,7 +159,7 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1.5">
         {#each presetColors as c (c.hex)}
-          <button 
+          <button
             onclick={() => applyColor(c)}
             style="background-color: {c.hex}"
             class="w-5 h-5 rounded-md border border-slate-900 shadow-sm transition-transform hover:scale-110 focus:outline-none cursor-pointer"
@@ -155,7 +169,7 @@
       </div>
 
       <!-- Color Indicator -->
-      <div 
+      <div
         style="background-color: {selectedColor}"
         class="w-6 h-6 rounded-lg border border-cyan-500/40 shadow-neonCyan"
       ></div>
@@ -164,10 +178,10 @@
     <!-- Brightness Slider -->
     <div class="flex items-center gap-3 bg-[#090e17]/60 px-3 py-1.5 rounded-xl border border-slate-800/80 h-9">
       <Sun class="w-4 h-4 text-purple-400" />
-      <input 
-        type="range" 
-        min="0" 
-        max="255" 
+      <input
+        type="range"
+        min="0"
+        max="255"
         value={device.state?.bri ?? 128}
         oninput={(e) => onSetBrightness(device.id, parseInt(e.target.value))}
         disabled={!device.state?.on}
@@ -181,7 +195,7 @@
     <!-- Custom Glassmorphic CyberSelect Dropdowns -->
     <div class="grid grid-cols-2 gap-2">
       <!-- FX CyberSelect -->
-      <CyberSelect 
+      <CyberSelect
         value={device.state?.seg?.[0]?.fx ?? 0}
         options={effects}
         icon={Sparkles}
@@ -191,7 +205,7 @@
       />
 
       <!-- Palette CyberSelect -->
-      <CyberSelect 
+      <CyberSelect
         value={device.state?.seg?.[0]?.pal ?? 0}
         options={palettes}
         icon={Palette}

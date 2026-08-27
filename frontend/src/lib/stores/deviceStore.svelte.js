@@ -12,12 +12,24 @@ const isWails = typeof window !== 'undefined' && window.runtime !== undefined;
 
 export function getDeviceStore() {
   return {
-    get devices() { return devices; },
-    get onlineDevices() { return (devices || []).filter(d => d && d.isOnline); },
-    get effects() { return effects; },
-    get palettes() { return palettes; },
-    get isScanning() { return isScanning; },
-    get isConnected() { return isConnected; },
+    get devices() {
+      return devices;
+    },
+    get onlineDevices() {
+      return (devices || []).filter((d) => d && d.isOnline);
+    },
+    get effects() {
+      return effects;
+    },
+    get palettes() {
+      return palettes;
+    },
+    get isScanning() {
+      return isScanning;
+    },
+    get isConnected() {
+      return isConnected;
+    },
 
     async init() {
       await loadDevices();
@@ -45,14 +57,14 @@ export function getDeviceStore() {
     },
 
     async togglePower(deviceId) {
-      const dev = devices.find(d => d.id === deviceId);
+      const dev = devices.find((d) => d.id === deviceId);
       if (!dev) return;
       const targetState = !dev.state?.on;
-      const targetBri = (dev.state?.bri && dev.state.bri > 0) ? dev.state.bri : 128;
+      const targetBri = dev.state?.bri && dev.state.bri > 0 ? dev.state.bri : 128;
       dev.state = { ...dev.state, on: targetState, bri: targetBri };
 
-      const statePayload = targetState 
-        ? { on: true, bri: targetBri, mainseg: 0, seg: [{ id: 0, on: true }] } 
+      const statePayload = targetState
+        ? { on: true, bri: targetBri, mainseg: 0, seg: [{ id: 0, on: true }] }
         : { on: false };
 
       try {
@@ -71,7 +83,7 @@ export function getDeviceStore() {
     },
 
     async setBrightness(deviceId, brightness) {
-      const dev = devices.find(d => d.id === deviceId);
+      const dev = devices.find((d) => d.id === deviceId);
       if (!dev) return;
       dev.state = { ...dev.state, bri: brightness };
 
@@ -97,7 +109,7 @@ export function getDeviceStore() {
     },
 
     async setColor(deviceId, r, g, b) {
-      const dev = devices.find(d => d.id === deviceId);
+      const dev = devices.find((d) => d.id === deviceId);
       if (!dev) return;
 
       try {
@@ -119,7 +131,7 @@ export function getDeviceStore() {
     },
 
     async setEffect(deviceId, effectFx) {
-      const dev = devices.find(d => d.id === deviceId);
+      const dev = devices.find((d) => d.id === deviceId);
       if (!dev) return;
 
       if (!dev.state) dev.state = {};
@@ -149,7 +161,7 @@ export function getDeviceStore() {
     },
 
     async setPalette(deviceId, paletteId) {
-      const dev = devices.find(d => d.id === deviceId);
+      const dev = devices.find((d) => d.id === deviceId);
       if (!dev) return;
 
       if (!dev.state) dev.state = {};
@@ -179,7 +191,7 @@ export function getDeviceStore() {
     },
 
     async renameDevice(deviceId, newName) {
-      const dev = devices.find(d => d.id === deviceId);
+      const dev = devices.find((d) => d.id === deviceId);
       if (!dev) return;
       dev.name = newName;
 
@@ -246,10 +258,7 @@ async function loadDevices() {
 
 async function loadMetadata() {
   try {
-    const [effRes, palRes] = await Promise.all([
-      fetch('/api/v1/effects'),
-      fetch('/api/v1/palettes')
-    ]);
+    const [effRes, palRes] = await Promise.all([fetch('/api/v1/effects'), fetch('/api/v1/palettes')]);
     if (effRes.ok) effects = await effRes.json();
     if (palRes.ok) palettes = await palRes.json();
   } catch (e) {
@@ -260,14 +269,14 @@ async function loadMetadata() {
 function connectWebSocket() {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsURL = `${protocol}//${location.host}/api/v1/ws`;
-  
+
   try {
     ws = new WebSocket(wsURL);
-    
+
     ws.onopen = () => {
       isConnected = true;
     };
-    
+
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
@@ -278,7 +287,7 @@ function connectWebSocket() {
         console.error('Error parsing WS message:', e);
       }
     };
-    
+
     ws.onclose = () => {
       isConnected = false;
       setTimeout(connectWebSocket, 3000);
@@ -289,7 +298,7 @@ function connectWebSocket() {
 }
 
 function upsertDevice(newDev) {
-  const idx = devices.findIndex(d => d.id === newDev.id);
+  const idx = devices.findIndex((d) => d.id === newDev.id);
   if (idx >= 0) {
     devices[idx] = newDev;
   } else {

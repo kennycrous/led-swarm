@@ -1,11 +1,11 @@
 <script>
   import { Sparkles, Play, Trash2, Sun, Moon, Film, Flame, Zap, Pin, Maximize2, MoreVertical } from 'lucide-svelte';
 
-  let { 
-    scene, 
+  let {
+    scene,
     isPinned = true,
     cardSize = 'normal',
-    onApply = () => {}, 
+    onApply = () => {},
     onDelete = () => {},
     onTogglePin = () => {},
     onToggleSize = () => {}
@@ -37,8 +37,9 @@
   const SelectedIcon = $derived(iconMap[scene.icon] || Sparkles);
 </script>
 
-<div class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300">
-  
+<div
+  class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300"
+>
   <!-- Top Accent Status Pill Bar -->
   <div class="w-full h-1 rounded-full bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500"></div>
 
@@ -57,8 +58,8 @@
     <!-- Options Menu & Delete Button -->
     <div class="flex items-center gap-1.5 relative">
       <!-- Card Options Dropdown Trigger -->
-      <button 
-        onclick={() => isMenuOpen = !isMenuOpen}
+      <button
+        onclick={() => (isMenuOpen = !isMenuOpen)}
         class="p-2.5 rounded-xl bg-[#090e17]/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all cursor-pointer"
         title="Card Options"
       >
@@ -67,10 +68,10 @@
 
       <!-- Glassmorphic Cyber Context Dropdown Menu -->
       {#if isMenuOpen}
-        <div 
+        <div
           class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-cyan-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
         >
-          <button 
+          <button
             onclick={() => {
               onToggleSize(scene.id);
               isMenuOpen = false;
@@ -81,7 +82,7 @@
             <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
           </button>
 
-          <button 
+          <button
             onclick={() => {
               onTogglePin(scene.id, 'scene');
               isMenuOpen = false;
@@ -92,7 +93,7 @@
             <span>{isPinned ? 'Unpin from Canvas' : 'Pin to Dashboard'}</span>
           </button>
 
-          <button 
+          <button
             onclick={() => {
               onDelete(scene.id);
               isMenuOpen = false;
@@ -109,7 +110,7 @@
 
   <!-- Bottom Apply Action Bar -->
   <div class="pt-2">
-    <button 
+    <button
       onclick={handleApply}
       disabled={isApplying}
       class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-medium text-xs shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all duration-200 active:scale-95 disabled:opacity-50 cursor-pointer h-9"
