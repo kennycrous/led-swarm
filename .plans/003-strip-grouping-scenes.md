@@ -92,6 +92,9 @@ This implementation plan covers **Slice 003: Virtual Strip Grouping & Multi-Zone
 - [ ] Add Dashboard group filter pills allowing filtering main device grid by active group.
 - [ ] Render Groups & Scenes tab with grid of active Groups and Scenes.
 
+### Task 6: Roadmap Documentation Update
+- [ ] Update `.docs/roadmap.md` to mark Slice 003 as COMPLETED (`🟢 Slice 003 [COMPLETED]`) with checked deliverables.
+
 ---
 
 ## 4. Verification & Testing Criteria
