@@ -99,7 +99,7 @@ func (d *Database) SaveDevice(dev Device) error {
 	INSERT INTO devices (id, name, ip_address, mac_address, led_count, is_online, last_seen)
 	VALUES (?, ?, ?, ?, ?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
-		name = excluded.name,
+		name = CASE WHEN excluded.name != '' THEN excluded.name ELSE devices.name END,
 		ip_address = excluded.ip_address,
 		mac_address = excluded.mac_address,
 		led_count = excluded.led_count,
@@ -108,6 +108,22 @@ func (d *Database) SaveDevice(dev Device) error {
 	`
 
 	_, err := d.db.Exec(query, dev.ID, dev.Name, dev.IPAddress, dev.MACAddress, dev.LEDCount, dev.IsOnline, time.Now())
+	return err
+}
+
+func (d *Database) UpdateDeviceName(id string, name string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	_, err := d.db.Exec("UPDATE devices SET name = ? WHERE id = ?", name, id)
+	return err
+}
+
+func (d *Database) DeleteDevice(id string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	_, err := d.db.Exec("DELETE FROM devices WHERE id = ?", id)
 	return err
 }
 

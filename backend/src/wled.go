@@ -64,6 +64,9 @@ func NewWLEDClient() *WLEDClient {
 	return &WLEDClient{
 		httpClient: &http.Client{
 			Timeout: 3 * time.Second,
+			Transport: &http.Transport{
+				DisableKeepAlives: true,
+			},
 		},
 	}
 }
@@ -89,29 +92,40 @@ func (c *WLEDClient) FetchDeviceInfo(ip string) (*WLEDInfo, error) {
 }
 
 func (c *WLEDClient) SetState(ip string, state WLEDState) error {
-	url := fmt.Sprintf("http://%s/json/state", ip)
 	body, err := json.Marshal(state)
 	if err != nil {
 		return err
 	}
+	return c.SetRawState(ip, body)
+}
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		return err
+func (c *WLEDClient) SetRawState(ip string, rawJSON json.RawMessage) error {
+	url := fmt.Sprintf("http://%s/json/state", ip)
+
+	var lastErr error
+	for attempt := 0; attempt < 2; attempt++ {
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(rawJSON))
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Close = true
+
+		resp, err := c.httpClient.Do(req)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return nil
+			}
+			lastErr = fmt.Errorf("failed to update wled state, status: %d", resp.StatusCode)
+		} else {
+			lastErr = err
+		}
+
+		time.Sleep(50 * time.Millisecond)
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to update wled state, status: %d", resp.StatusCode)
-	}
-
-	return nil
+	return lastErr
 }
 
 // SendDDPFrame sends raw RGB pixel data over DDP (Distributed Display Protocol) UDP port 4048

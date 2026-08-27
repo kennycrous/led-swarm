@@ -13,16 +13,16 @@ import (
 type MDNSScanner struct {
 	db         *Database
 	wledClient *WLEDClient
-	hub        *Hub
+	devMgr     *DeviceManager
 	isScanning bool
 	mu         sync.Mutex
 }
 
-func NewMDNSScanner(db *Database, wledClient *WLEDClient, hub *Hub) *MDNSScanner {
+func NewMDNSScanner(db *Database, wledClient *WLEDClient, devMgr *DeviceManager) *MDNSScanner {
 	return &MDNSScanner{
 		db:         db,
 		wledClient: wledClient,
-		hub:        hub,
+		devMgr:     devMgr,
 	}
 }
 
@@ -95,18 +95,9 @@ func (s *MDNSScanner) handleServiceEntry(entry *zeroconf.ServiceEntry) {
 		IsOnline:   true,
 	}
 
-	if err := s.db.SaveDevice(dev); err != nil {
-		log.Printf("[mDNS] Failed to save device %s to database: %v", id, err)
-		return
-	}
+	log.Printf("[mDNS] Successfully discovered WLED device: %s (%s) [%d LEDs]", dev.Name, dev.IPAddress, dev.LEDCount)
 
-	log.Printf("[mDNS] Successfully registered WLED device: %s (%s) [%d LEDs]", dev.Name, dev.IPAddress, dev.LEDCount)
-
-	// Broadcast update to WebSocket hub
-	if s.hub != nil {
-		s.hub.BroadcastJSON(map[string]interface{}{
-			"type":   "device_discovered",
-			"device": dev,
-		})
+	if s.devMgr != nil {
+		s.devMgr.RegisterDevice(dev)
 	}
 }
