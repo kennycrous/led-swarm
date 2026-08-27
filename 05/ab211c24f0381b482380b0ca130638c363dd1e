@@ -1,0 +1,16 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 141-159,175,188,200
+.plans/005-testing-and-linting.md
+  h_e41d77f8309f5c 1-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "05ab211c24f0381b482380b0ca130638c363dd1e",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
