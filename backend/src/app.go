@@ -8,23 +8,25 @@ import (
 
 // App struct for Wails desktop application
 type App struct {
-	ctx        context.Context
-	db         *Database
-	wledClient *WLEDClient
-	devMgr     *DeviceManager
-	groupMgr   *GroupManager
-	hub        *Hub
-	scanner    *MDNSScanner
+	ctx          context.Context
+	db           *Database
+	wledClient   *WLEDClient
+	devMgr       *DeviceManager
+	groupMgr     *GroupManager
+	dashboardMgr *DashboardManager
+	hub          *Hub
+	scanner      *MDNSScanner
 }
 
-func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, hub *Hub, scanner *MDNSScanner) *App {
+func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, hub *Hub, scanner *MDNSScanner) *App {
 	return &App{
-		db:         db,
-		wledClient: wledClient,
-		devMgr:     devMgr,
-		groupMgr:   groupMgr,
-		hub:        hub,
-		scanner:    scanner,
+		db:           db,
+		wledClient:   wledClient,
+		devMgr:       devMgr,
+		groupMgr:     groupMgr,
+		dashboardMgr: dashboardMgr,
+		hub:          hub,
+		scanner:      scanner,
 	}
 }
 
@@ -136,4 +138,34 @@ func (a *App) ApplyScene(id string) error {
 
 func (a *App) DeleteScene(id string) error {
 	return a.groupMgr.DeleteScene(id)
+}
+
+// Dashboard Wails Bindings
+
+func (a *App) GetDashboardItems() ([]DashboardItem, error) {
+	return a.dashboardMgr.GetItems(), nil
+}
+
+func (a *App) PinDashboardItem(itemID string, itemType string, isPinned bool) (*DashboardItem, error) {
+	return a.dashboardMgr.PinItem(itemID, itemType, isPinned)
+}
+
+func (a *App) SetDashboardItemSize(itemID string, size string) (*DashboardItem, error) {
+	return a.dashboardMgr.SetItemSize(itemID, size)
+}
+
+func (a *App) SetDashboardItemPanel(itemID string, panelID string) (*DashboardItem, error) {
+	return a.dashboardMgr.SetItemPanel(itemID, panelID)
+}
+
+func (a *App) GetDashboardPanels() ([]DashboardPanel, error) {
+	return a.dashboardMgr.GetPanels()
+}
+
+func (a *App) AddDashboardPanel(title string) (*DashboardPanel, error) {
+	return a.dashboardMgr.AddPanel("", title)
+}
+
+func (a *App) DeleteDashboardPanel(id string) error {
+	return a.dashboardMgr.DeletePanel(id)
 }

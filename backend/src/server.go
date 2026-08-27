@@ -12,24 +12,26 @@ import (
 
 // Server handles headless HTTP web API and static file serving
 type Server struct {
-	db         *Database
-	wledClient *WLEDClient
-	devMgr     *DeviceManager
-	groupMgr   *GroupManager
-	hub        *Hub
-	scanner    *MDNSScanner
-	distFS     embed.FS
+	db           *Database
+	wledClient   *WLEDClient
+	devMgr       *DeviceManager
+	groupMgr     *GroupManager
+	dashboardMgr *DashboardManager
+	hub          *Hub
+	scanner      *MDNSScanner
+	distFS       embed.FS
 }
 
-func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, hub *Hub, scanner *MDNSScanner, distFS embed.FS) *Server {
+func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, hub *Hub, scanner *MDNSScanner, distFS embed.FS) *Server {
 	return &Server{
-		db:         db,
-		wledClient: wledClient,
-		devMgr:     devMgr,
-		groupMgr:   groupMgr,
-		hub:        hub,
-		scanner:    scanner,
-		distFS:     distFS,
+		db:           db,
+		wledClient:   wledClient,
+		devMgr:       devMgr,
+		groupMgr:     groupMgr,
+		dashboardMgr: dashboardMgr,
+		hub:          hub,
+		scanner:      scanner,
+		distFS:       distFS,
 	}
 }
 
@@ -53,6 +55,15 @@ func (s *Server) Start(port int) error {
 	mux.HandleFunc("/api/v1/scenes/", s.handleScenes)
 	mux.HandleFunc("/api/v1/scenes/capture", s.handleCaptureScene)
 	mux.HandleFunc("/api/v1/scenes/apply", s.handleApplyScene)
+
+	// Dashboard API Endpoints
+	mux.HandleFunc("/api/v1/dashboard/items", s.handleDashboardItems)
+	mux.HandleFunc("/api/v1/dashboard/pin", s.handlePinDashboardItem)
+	mux.HandleFunc("/api/v1/dashboard/size", s.handleSetDashboardItemSize)
+	mux.HandleFunc("/api/v1/dashboard/panel", s.handleSetDashboardItemPanel)
+	mux.HandleFunc("/api/v1/dashboard/panels", s.handleDashboardPanels)
+	mux.HandleFunc("/api/v1/dashboard/panels/", s.handleDashboardPanels)
+	mux.HandleFunc("/api/v1/dashboard/reorder", s.handleReorderDashboardItems)
 
 	mux.HandleFunc("/api/v1/ws", s.hub.ServeWS)
 
@@ -302,4 +313,151 @@ func (s *Server) handleApplyScene(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]string{"status": "scene_applied"})
+}
+
+// Dashboard Handlers
+
+func (s *Server) handleDashboardItems(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	items := s.dashboardMgr.GetItems()
+	json.NewEncoder(w).Encode(items)
+}
+
+func (s *Server) handlePinDashboardItem(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ItemID   string `json:"itemId"`
+		ItemType string `json:"itemType"`
+		IsPinned bool   `json:"isPinned"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ItemID == "" {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	item, err := s.dashboardMgr.PinItem(req.ItemID, req.ItemType, req.IsPinned)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(item)
+}
+
+func (s *Server) handleSetDashboardItemSize(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ItemID string `json:"itemId"`
+		Size   string `json:"size"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ItemID == "" {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	item, err := s.dashboardMgr.SetItemSize(req.ItemID, req.Size)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(item)
+}
+
+func (s *Server) handleSetDashboardItemPanel(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ItemID  string `json:"itemId"`
+		PanelID string `json:"panelId"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ItemID == "" {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	item, err := s.dashboardMgr.SetItemPanel(req.ItemID, req.PanelID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(item)
+}
+
+func (s *Server) handleReorderDashboardItems(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ItemIDs []string `json:"itemIds"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid parameters", http.StatusBadRequest)
+		return
+	}
+	if err := s.dashboardMgr.ReorderItems(req.ItemIDs); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "reordered"})
+}
+
+func (s *Server) handleDashboardPanels(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case http.MethodGet:
+		panels, err := s.dashboardMgr.GetPanels()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(panels)
+	case http.MethodPost:
+		var req struct {
+			ID    string `json:"id"`
+			Title string `json:"title"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Title == "" {
+			http.Error(w, "Invalid panel title", http.StatusBadRequest)
+			return
+		}
+		panel, err := s.dashboardMgr.AddPanel(req.ID, req.Title)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(panel)
+	case http.MethodDelete:
+		id := strings.TrimPrefix(r.URL.Path, "/api/v1/dashboard/panels/")
+		if id == "" {
+			var req struct {
+				ID string `json:"id"`
+			}
+			json.NewDecoder(r.Body).Decode(&req)
+			id = req.ID
+		}
+		if id == "" {
+			http.Error(w, "Missing panel ID", http.StatusBadRequest)
+			return
+		}
+		if err := s.dashboardMgr.DeletePanel(id); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }

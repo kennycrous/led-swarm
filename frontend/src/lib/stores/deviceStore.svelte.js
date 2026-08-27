@@ -13,6 +13,7 @@ const isWails = typeof window !== 'undefined' && window.runtime !== undefined;
 export function getDeviceStore() {
   return {
     get devices() { return devices; },
+    get onlineDevices() { return (devices || []).filter(d => d && d.isOnline); },
     get effects() { return effects; },
     get palettes() { return palettes; },
     get isScanning() { return isScanning; },

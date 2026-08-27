@@ -13,13 +13,14 @@ import (
 )
 
 type DeviceManager struct {
-	db         *Database
-	wledClient *WLEDClient
-	hub        *Hub
-	devices    map[string]*Device
-	effects    []string
-	palettes   []string
-	mu         sync.RWMutex
+	db           *Database
+	wledClient   *WLEDClient
+	hub          *Hub
+	dashboardMgr *DashboardManager
+	devices      map[string]*Device
+	effects      []string
+	palettes     []string
+	mu           sync.RWMutex
 }
 
 func NewDeviceManager(db *Database, wledClient *WLEDClient, hub *Hub) *DeviceManager {
@@ -38,6 +39,10 @@ func NewDeviceManager(db *Database, wledClient *WLEDClient, hub *Hub) *DeviceMan
 	}
 
 	return dm
+}
+
+func (dm *DeviceManager) SetDashboardManager(dashboardMgr *DashboardManager) {
+	dm.dashboardMgr = dashboardMgr
 }
 
 func (dm *DeviceManager) loadStoredDevices() error {
