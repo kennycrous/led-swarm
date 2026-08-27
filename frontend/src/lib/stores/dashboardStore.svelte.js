@@ -7,8 +7,12 @@ const isWails = typeof window !== 'undefined' && window.runtime !== undefined;
 
 export function getDashboardStore() {
   return {
-    get dashboardItems() { return dashboardItems; },
-    get panels() { return panels; },
+    get dashboardItems() {
+      return dashboardItems;
+    },
+    get panels() {
+      return panels;
+    },
 
     async init() {
       await loadDashboardItems();
@@ -16,23 +20,23 @@ export function getDashboardStore() {
     },
 
     isPinned(itemId) {
-      const found = dashboardItems.find(i => i.itemId === itemId);
+      const found = dashboardItems.find((i) => i.itemId === itemId);
       return found ? found.isPinned : true;
     },
 
     getSize(itemId) {
-      const found = dashboardItems.find(i => i.itemId === itemId);
+      const found = dashboardItems.find((i) => i.itemId === itemId);
       return found?.size || 'normal';
     },
 
     getPanelId(itemId) {
-      const found = dashboardItems.find(i => i.itemId === itemId);
+      const found = dashboardItems.find((i) => i.itemId === itemId);
       return found?.panelId || '';
     },
 
     async setSize(itemId, size) {
       // Optimistic local reactivity update
-      const found = dashboardItems.find(i => i.itemId === itemId);
+      const found = dashboardItems.find((i) => i.itemId === itemId);
       if (found) {
         found.size = size;
       } else {
@@ -65,7 +69,7 @@ export function getDashboardStore() {
 
     async setPanelId(itemId, panelId) {
       // Optimistic local update
-      const found = dashboardItems.find(i => i.itemId === itemId);
+      const found = dashboardItems.find((i) => i.itemId === itemId);
       if (found) {
         found.panelId = panelId;
       } else {
@@ -141,7 +145,7 @@ export function getDashboardStore() {
         }
 
         if (newPanel) {
-          panels = [...panels.filter(p => p.id !== newPanel.id), newPanel];
+          panels = [...panels.filter((p) => p.id !== newPanel.id), newPanel];
         } else {
           const fallback = { id: 'panel-' + Date.now(), title: title.trim() };
           panels = [...panels, fallback];
@@ -154,7 +158,7 @@ export function getDashboardStore() {
     },
 
     async deletePanel(panelId) {
-      panels = panels.filter(p => p.id !== panelId);
+      panels = panels.filter((p) => p.id !== panelId);
 
       try {
         if (isWails && window.go?.main?.App?.DeleteDashboardPanel) {
@@ -202,13 +206,13 @@ async function loadDashboardPanels() {
 }
 
 function upsertItem(newItem) {
-  const idx = dashboardItems.findIndex(i => i.itemId === newItem.itemId);
+  const idx = dashboardItems.findIndex((i) => i.itemId === newItem.itemId);
   if (idx >= 0) {
     const current = dashboardItems[idx];
     dashboardItems[idx] = {
       ...current,
       ...newItem,
-      panelId: (newItem.panelId !== undefined && newItem.panelId !== '') ? newItem.panelId : (current.panelId || ''),
+      panelId: newItem.panelId !== undefined && newItem.panelId !== '' ? newItem.panelId : current.panelId || '',
       size: newItem.size || current.size || 'normal'
     };
   } else {

@@ -8,10 +8,18 @@ const isWails = typeof window !== 'undefined' && window.runtime !== undefined;
 
 export function getGroupStore() {
   return {
-    get groups() { return groups; },
-    get scenes() { return scenes; },
-    get activeGroupId() { return activeGroupId; },
-    set activeGroupId(id) { activeGroupId = id; },
+    get groups() {
+      return groups;
+    },
+    get scenes() {
+      return scenes;
+    },
+    get activeGroupId() {
+      return activeGroupId;
+    },
+    set activeGroupId(id) {
+      activeGroupId = id;
+    },
 
     async init() {
       await loadGroups();
@@ -55,7 +63,7 @@ export function getGroupStore() {
             method: 'DELETE'
           });
         }
-        groups = groups.filter(g => g.id !== id);
+        groups = groups.filter((g) => g.id !== id);
         if (activeGroupId === id) activeGroupId = null;
       } catch (e) {
         console.error('Failed to delete group:', e);
@@ -131,7 +139,7 @@ export function getGroupStore() {
             method: 'DELETE'
           });
         }
-        scenes = scenes.filter(s => s.id !== id);
+        scenes = scenes.filter((s) => s.id !== id);
       } catch (e) {
         console.error('Failed to delete scene:', e);
       }
@@ -170,7 +178,7 @@ async function loadScenes() {
 }
 
 function upsertGroup(newGroup) {
-  const idx = groups.findIndex(g => g.id === newGroup.id);
+  const idx = groups.findIndex((g) => g.id === newGroup.id);
   if (idx >= 0) {
     groups[idx] = newGroup;
   } else {
@@ -179,7 +187,7 @@ function upsertGroup(newGroup) {
 }
 
 function upsertScene(newScene) {
-  const idx = scenes.findIndex(s => s.id === newScene.id);
+  const idx = scenes.findIndex((s) => s.id === newScene.id);
   if (idx >= 0) {
     scenes[idx] = newScene;
   } else {

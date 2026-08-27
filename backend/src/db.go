@@ -32,8 +32,8 @@ type DashboardItem struct {
 	ItemID    string `json:"itemId"`
 	ItemType  string `json:"itemType"` // "device", "group", "scene"
 	Position  int    `json:"position"`
-	Size      string `json:"size"`     // "compact", "normal", "wide"
-	PanelID   string `json:"panelId"`  // "default" or custom panel id
+	Size      string `json:"size"`    // "compact", "normal", "wide"
+	PanelID   string `json:"panelId"` // "default" or custom panel id
 	IsPinned  bool   `json:"isPinned"`
 	CreatedAt string `json:"createdAt"`
 }
@@ -264,32 +264,34 @@ func (d *Database) GetGroups() ([]Group, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	var groups []Group
 	for rows.Next() {
 		var g Group
 		var desc sql.NullString
 		if err := rows.Scan(&g.ID, &g.Name, &desc, &g.CreatedAt); err != nil {
+			rows.Close()
 			return nil, err
 		}
 		if desc.Valid {
 			g.Description = desc.String
 		}
+		g.DeviceIDs = make([]string, 0)
+		groups = append(groups, g)
+	}
+	rows.Close()
 
-		devRows, err := d.db.Query("SELECT device_id FROM group_devices WHERE group_id = ?", g.ID)
+	for i := range groups {
+		devRows, err := d.db.Query("SELECT device_id FROM group_devices WHERE group_id = ?", groups[i].ID)
 		if err == nil {
-			g.DeviceIDs = make([]string, 0)
 			for devRows.Next() {
 				var devID string
 				if err := devRows.Scan(&devID); err == nil {
-					g.DeviceIDs = append(g.DeviceIDs, devID)
+					groups[i].DeviceIDs = append(groups[i].DeviceIDs, devID)
 				}
 			}
 			devRows.Close()
 		}
-
-		groups = append(groups, g)
 	}
 
 	return groups, nil

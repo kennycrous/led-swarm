@@ -23,7 +23,7 @@ export default {
         neonCyan: '0 0 15px rgba(6, 182, 212, 0.3)',
         neonMagenta: '0 0 15px rgba(168, 85, 247, 0.3)'
       }
-    },
+    }
   },
-  plugins: [],
+  plugins: []
 };

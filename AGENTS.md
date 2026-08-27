@@ -77,4 +77,6 @@ Agents modifying or adding UI components must adhere to the following design sys
 - **CGO Avoidance**: Maintain CGO-free pure Go builds to ensure cross-platform single binary compilation without external C compilers.
 - **Embedded Web Assets**: Ensure all Svelte frontend build outputs in `frontend/dist` can be cleanly embedded via `go:embed`.
 - **Wails Bindings**: Place Go application methods exposed to the desktop UI in the Wails app struct for auto-generated TypeScript bindings.
+- **Test-Driven Development (TDD)**: When implementing any code changes or new features, first write a failing unit or component test (Red phase), implement the code changes, and verify that the test turns green (`make test`) before proceeding.
+- **Pre-Commit Pause Directive**: ALWAYS pause and wait for explicit user confirmation before committing any changes (`git commit`), allowing the user to locally test the working tree first.
 - **File Links**: Always link to relevant files using standard markdown links (e.g. `[architecture.md](file:///mnt/Data/source/led-swarm/.docs/architecture.md)`).

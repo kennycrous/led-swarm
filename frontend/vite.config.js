@@ -5,9 +5,15 @@ import path from 'path';
 export default defineConfig({
   plugins: [svelte()],
   resolve: {
+    conditions: ['browser'],
     alias: {
-      '$lib': path.resolve('./src/lib')
+      $lib: path.resolve('./src/lib')
     }
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: []
   },
   server: {
     proxy: {

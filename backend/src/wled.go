@@ -44,9 +44,9 @@ type WLEDInfo struct {
 	Ver  string `json:"ver"`
 	Vid  int    `json:"vid"`
 	Leds struct {
-		Count int `json:"count"`
-		Fps   int `json:"fps"`
-		Pwr   int `json:"pwr"`
+		Count  int `json:"count"`
+		Fps    int `json:"fps"`
+		Pwr    int `json:"pwr"`
 		Maxpwr int `json:"maxpwr"`
 		Maxseg int `json:"maxseg"`
 	} `json:"leds"`

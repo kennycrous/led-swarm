@@ -11,9 +11,9 @@ import (
 )
 
 type SceneSnapshot struct {
-	DeviceID   string          `json:"deviceId"`
-	IPAddress  string          `json:"ipAddress"`
-	StateJSON  json.RawMessage `json:"stateJson"`
+	DeviceID  string          `json:"deviceId"`
+	IPAddress string          `json:"ipAddress"`
+	StateJSON json.RawMessage `json:"stateJson"`
 }
 
 type GroupManager struct {

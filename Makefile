@@ -1,4 +1,4 @@
-.PHONY: all dev-backend dev-frontend dev-desktop build build-frontend build-backend test test-backend test-frontend clean help
+.PHONY: all dev-backend dev-frontend dev-desktop build build-frontend build-backend test test-backend test-frontend lint lint-backend lint-frontend fmt ensure-dist clean help
 
 # Default target
 all: build
@@ -41,34 +41,59 @@ build-backend: build-frontend
 ## build: Full build (frontend assets + backend static server binary)
 build: build-backend
 
+## ensure-dist: Ensures frontend dist assets exist before running backend Go tests/vet
+ensure-dist:
+	@mkdir -p backend/src/dist
+	@if [ ! -f backend/src/dist/index.html ]; then $(MAKE) build-frontend; fi
+
+## fmt: Automatically format Go backend and Svelte/JS frontend files (removes trailing whitespace)
+fmt:
+	@echo "==> Formatting Go backend code (go fmt)..."
+	cd backend && go fmt ./src/...
+	@echo "==> Formatting Svelte and JS frontend code (Prettier)..."
+	cd frontend && npm run format
+
 ## test-backend: Run backend Go unit tests
-test-backend:
+test-backend: ensure-dist
 	@echo "==> Running Go backend unit tests..."
 	cd backend && go test -v ./src/...
 
-## test-frontend: Run frontend build check
+## test-frontend: Run frontend Vitest unit tests
 test-frontend:
-	@echo "==> Running frontend build validation..."
-	cd frontend && npm run build
+	@echo "==> Running frontend Vitest unit tests..."
+	cd frontend && npm run test
 
-## test: Run all backend and frontend tests
+## test: Run all backend and frontend unit tests
 test: test-backend test-frontend
+
+## lint-backend: Run Go static code analysis (go vet)
+lint-backend: ensure-dist
+	@echo "==> Running Go static analysis (go vet)..."
+	cd backend && go vet ./src/...
+
+## lint-frontend: Run frontend formatting check (Prettier), ESLint, and svelte-check
+lint-frontend:
+	@echo "==> Running frontend formatting check (Prettier), ESLint, and svelte-check..."
+	cd frontend && npm run format:check && npm run lint && npm run check
+
+## lint: Run all backend and frontend linters
+lint: lint-backend lint-frontend
 
 ## clean: Clean generated binaries and build artifacts
 clean:
 	@echo "==> Cleaning build artifacts..."
 	rm -rf backend/led-swarm-server backend/led-swarm.exe backend/src/dist/assets backend/*.db *.db bin/ build/ frontend/dist
-	@mkdir -p backend/src/dist
-	@echo '<!DOCTYPE html><html><head><title>LED Swarm</title></head><body><h1>LED Swarm Backend Server</h1></body></html>' > backend/src/dist/index.html
 
 ## help: Display available targets
 help:
 	@echo "LED Swarm Orchestrator - Development & Build Commands"
 	@echo ""
 	@echo "Usage:"
+	@echo "  make fmt            Auto-format all backend Go code and frontend Svelte/JS files"
 	@echo "  make dev-backend    Start Go backend server locally (http://localhost:8080)"
 	@echo "  make dev-frontend   Start Svelte 5 + Vite frontend dev server (http://localhost:5173)"
 	@echo "  make dev-desktop    Start Wails desktop live reload application"
 	@echo "  make build          Build production frontend assets and Go server binary"
-	@echo "  make test           Run Go backend tests and frontend build check"
+	@echo "  make test           Run Go backend unit tests and Vitest frontend tests"
+	@echo "  make lint           Run Go vet static analysis, Prettier check, ESLint, and svelte-check"
 	@echo "  make clean          Remove build artifacts and test databases"

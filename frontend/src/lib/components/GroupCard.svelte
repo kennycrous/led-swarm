@@ -2,10 +2,10 @@
   import { Power, Sun, Palette, Sparkles, Trash2, Layers, Cpu, Pin, Maximize2, MoreVertical } from 'lucide-svelte';
   import CyberSelect from './CyberSelect.svelte';
 
-  let { 
-    group, 
+  let {
+    group,
     allDevices = [],
-    effects = [], 
+    effects = [],
     palettes = [],
     isPinned = true,
     cardSize = 'normal',
@@ -35,13 +35,9 @@
     { name: 'Crimson Red', hex: '#ef4444', r: 239, g: 68, b: 68 }
   ];
 
-  const assignedDevices = $derived(
-    allDevices.filter(d => group.deviceIds?.includes(d.id))
-  );
+  const assignedDevices = $derived(allDevices.filter((d) => group.deviceIds?.includes(d.id)));
 
-  const onlineCount = $derived(
-    assignedDevices.filter(d => d.isOnline).length
-  );
+  const onlineCount = $derived(assignedDevices.filter((d) => d.isOnline).length);
 
   function applyColor(c) {
     selectedColor = c.hex;
@@ -49,8 +45,11 @@
   }
 </script>
 
-<div class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full transition-all duration-300 {isMenuOpen ? 'z-50' : 'hover:z-30 z-10'} border-purple-500/20 hover:border-purple-500/40">
-  
+<div
+  class="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 relative group border h-full transition-all duration-300 {isMenuOpen
+    ? 'z-50'
+    : 'hover:z-30 z-10'} border-purple-500/20 hover:border-purple-500/40"
+>
   <!-- Top Accent Status Pill Bar -->
   <div class="w-full h-1 rounded-full bg-gradient-to-r from-purple-500 via-cyan-500 to-amber-500"></div>
 
@@ -70,20 +69,22 @@
 
     <!-- Power, Delete & Card Options Menu -->
     <div class="flex items-center gap-1.5 relative">
-      <button 
+      <button
         onclick={() => {
           groupPower = !groupPower;
           onTogglePower(group.id, groupPower);
         }}
-        class="p-2.5 rounded-xl transition-all duration-200 {groupPower ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan' : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
+        class="p-2.5 rounded-xl transition-all duration-200 {groupPower
+          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan'
+          : 'bg-[#090e17]/80 text-slate-600 border border-slate-800'} cursor-pointer"
         title="Toggle Group Power"
       >
         <Power class="w-4 h-4" />
       </button>
 
       <!-- Card Options Dropdown Trigger -->
-      <button 
-        onclick={() => isMenuOpen = !isMenuOpen}
+      <button
+        onclick={() => (isMenuOpen = !isMenuOpen)}
         class="p-2.5 rounded-xl bg-[#090e17]/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all cursor-pointer"
         title="Card Options"
       >
@@ -92,10 +93,10 @@
 
       <!-- Glassmorphic Cyber Context Dropdown Menu -->
       {#if isMenuOpen}
-        <div 
+        <div
           class="absolute top-12 right-0 z-50 w-48 bg-[#090e17]/95 border border-purple-500/30 rounded-2xl p-1.5 shadow-[0_0_25px_rgba(168,85,247,0.25)] backdrop-blur-xl space-y-1 text-xs font-mono"
         >
-          <button 
+          <button
             onclick={() => {
               onToggleSize(group.id);
               isMenuOpen = false;
@@ -106,7 +107,7 @@
             <span>{cardSize === 'wide' ? 'Normal Width' : 'Expand Full Width'}</span>
           </button>
 
-          <button 
+          <button
             onclick={() => {
               onTogglePin(group.id, 'group');
               isMenuOpen = false;
@@ -117,7 +118,7 @@
             <span>{isPinned ? 'Unpin from Canvas' : 'Pin to Dashboard'}</span>
           </button>
 
-          <button 
+          <button
             onclick={() => {
               onDelete(group.id);
               isMenuOpen = false;
@@ -134,8 +135,12 @@
 
   <!-- Group Strip Members Badges -->
   <div class="flex flex-wrap gap-1.5 -mt-1">
-    {#each assignedDevices as dev}
-      <span class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md border {dev.isOnline ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-800/50 border-slate-700 text-slate-500'}">
+    {#each assignedDevices as dev (dev.id)}
+      <span
+        class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md border {dev.isOnline
+          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          : 'bg-slate-800/50 border-slate-700 text-slate-500'}"
+      >
         <Cpu class="w-3 h-3" />
         {dev.name}
       </span>
@@ -147,8 +152,8 @@
     <!-- Quick Color Swatches & Indicator -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1.5">
-        {#each presetColors as c}
-          <button 
+        {#each presetColors as c (c.hex)}
+          <button
             onclick={() => applyColor(c)}
             style="background-color: {c.hex}"
             class="w-5 h-5 rounded-md border border-slate-900 shadow-sm transition-transform hover:scale-110 focus:outline-none cursor-pointer"
@@ -158,7 +163,7 @@
       </div>
 
       <!-- Color Indicator -->
-      <div 
+      <div
         style="background-color: {selectedColor}"
         class="w-6 h-6 rounded-lg border border-cyan-500/40 shadow-neonCyan"
       ></div>
@@ -167,10 +172,10 @@
     <!-- Group Brightness Slider -->
     <div class="flex items-center gap-3 bg-[#090e17]/60 px-3 py-1.5 rounded-xl border border-slate-800/80 h-9">
       <Sun class="w-4 h-4 text-purple-400" />
-      <input 
-        type="range" 
-        min="0" 
-        max="255" 
+      <input
+        type="range"
+        min="0"
+        max="255"
         value={groupBrightness}
         oninput={(e) => {
           groupBrightness = parseInt(e.target.value);
@@ -187,7 +192,7 @@
     <!-- Custom Glassmorphic CyberSelect Dropdowns -->
     <div class="grid grid-cols-2 gap-2">
       <!-- FX CyberSelect -->
-      <CyberSelect 
+      <CyberSelect
         value={selectedEffect}
         options={effects}
         icon={Sparkles}
@@ -200,7 +205,7 @@
       />
 
       <!-- Palette CyberSelect -->
-      <CyberSelect 
+      <CyberSelect
         value={selectedPalette}
         options={palettes}
         icon={Palette}
