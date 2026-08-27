@@ -1,0 +1,14 @@
+.plans/002-device-discovery-controls.md
+  h_e41d77f8309f5c 1-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "dd867b48cbb5b64ddbe8dd404760250034b383eb",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
