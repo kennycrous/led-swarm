@@ -17,18 +17,20 @@ type Server struct {
 	devMgr       *DeviceManager
 	groupMgr     *GroupManager
 	dashboardMgr *DashboardManager
+	canvasMgr    *CanvasManager
 	hub          *Hub
 	scanner      *MDNSScanner
 	distFS       embed.FS
 }
 
-func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, hub *Hub, scanner *MDNSScanner, distFS embed.FS) *Server {
+func NewServer(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, hub *Hub, scanner *MDNSScanner, distFS embed.FS) *Server {
 	return &Server{
 		db:           db,
 		wledClient:   wledClient,
 		devMgr:       devMgr,
 		groupMgr:     groupMgr,
 		dashboardMgr: dashboardMgr,
+		canvasMgr:    canvasMgr,
 		hub:          hub,
 		scanner:      scanner,
 		distFS:       distFS,
@@ -64,6 +66,11 @@ func (s *Server) Start(port int) error {
 	mux.HandleFunc("/api/v1/dashboard/panels", s.handleDashboardPanels)
 	mux.HandleFunc("/api/v1/dashboard/panels/", s.handleDashboardPanels)
 	mux.HandleFunc("/api/v1/dashboard/reorder", s.handleReorderDashboardItems)
+
+	// 2D Canvas API Endpoints
+	mux.HandleFunc("/api/v1/canvas/placements", s.handleCanvasPlacements)
+	mux.HandleFunc("/api/v1/canvas/placement", s.handleSaveCanvasPlacement)
+	mux.HandleFunc("/api/v1/canvas/placements/batch", s.handleBatchSaveCanvasPlacements)
 
 	mux.HandleFunc("/api/v1/ws", s.hub.ServeWS)
 
@@ -460,4 +467,49 @@ func (s *Server) handleDashboardPanels(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func (s *Server) handleCanvasPlacements(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s.canvasMgr.GetPlacements())
+}
+
+func (s *Server) handleSaveCanvasPlacement(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var placement CanvasPlacement
+	if err := json.NewDecoder(r.Body).Decode(&placement); err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+	if err := s.canvasMgr.SavePlacement(placement); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (s *Server) handleBatchSaveCanvasPlacements(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var placements []CanvasPlacement
+	if err := json.NewDecoder(r.Body).Decode(&placements); err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+	if err := s.canvasMgr.BatchSavePlacements(placements); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }

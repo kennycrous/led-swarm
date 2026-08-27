@@ -45,6 +45,15 @@ type DashboardPanel struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+type CanvasPlacement struct {
+	DeviceID string  `json:"deviceId"`
+	PosX     float64 `json:"posX"`
+	PosY     float64 `json:"posY"`
+	Rotation float64 `json:"rotation"`
+	Scale    float64 `json:"scale"`
+	Geometry string  `json:"geometry"` // "strip", "matrix", "ring"
+}
+
 type Database struct {
 	db *sql.DB
 	mu sync.RWMutex
@@ -99,13 +108,11 @@ func (d *Database) initSchema() error {
 
 	CREATE TABLE IF NOT EXISTS canvas_placements (
 		device_id TEXT PRIMARY KEY,
-		pos_x REAL NOT NULL DEFAULT 0.0,
-		pos_y REAL NOT NULL DEFAULT 0.0,
+		pos_x REAL NOT NULL DEFAULT 100.0,
+		pos_y REAL NOT NULL DEFAULT 100.0,
 		rotation REAL NOT NULL DEFAULT 0.0,
-		scale_x REAL NOT NULL DEFAULT 1.0,
-		scale_y REAL NOT NULL DEFAULT 1.0,
-		geometry_type TEXT DEFAULT 'linear',
-		FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+		scale REAL NOT NULL DEFAULT 1.0,
+		geometry TEXT DEFAULT 'strip'
 	);
 
 	CREATE TABLE IF NOT EXISTS scenes (
@@ -471,6 +478,67 @@ func (d *Database) DeleteDashboardPanel(id string) error {
 		return err
 	}
 	_, err = d.db.Exec("UPDATE dashboard_items SET panel_id = '' WHERE panel_id = ?", id)
+	return err
+}
+
+// Canvas Placement Operations
+
+func (d *Database) SaveCanvasPlacement(p CanvasPlacement) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	if p.Geometry == "" {
+		p.Geometry = "strip"
+	}
+	if p.Scale <= 0 {
+		p.Scale = 1.0
+	}
+
+	query := `
+	INSERT INTO canvas_placements (device_id, pos_x, pos_y, rotation, scale, geometry)
+	VALUES (?, ?, ?, ?, ?, ?)
+	ON CONFLICT(device_id) DO UPDATE SET
+		pos_x = excluded.pos_x,
+		pos_y = excluded.pos_y,
+		rotation = excluded.rotation,
+		scale = excluded.scale,
+		geometry = excluded.geometry;
+	`
+	_, err := d.db.Exec(query, p.DeviceID, p.PosX, p.PosY, p.Rotation, p.Scale, p.Geometry)
+	return err
+}
+
+func (d *Database) GetCanvasPlacements() ([]CanvasPlacement, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	rows, err := d.db.Query("SELECT device_id, pos_x, pos_y, rotation, scale, geometry FROM canvas_placements")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var placements []CanvasPlacement
+	for rows.Next() {
+		var p CanvasPlacement
+		var geom sql.NullString
+		if err := rows.Scan(&p.DeviceID, &p.PosX, &p.PosY, &p.Rotation, &p.Scale, &geom); err != nil {
+			return nil, err
+		}
+		if geom.Valid {
+			p.Geometry = geom.String
+		}
+		placements = append(placements, p)
+	}
+
+	return placements, nil
+}
+
+func (d *Database) DeleteCanvasPlacement(deviceID string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	_, err := d.db.Exec("DELETE FROM canvas_placements WHERE device_id = ?", deviceID)
 	return err
 }
 

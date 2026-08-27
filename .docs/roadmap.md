@@ -156,19 +156,19 @@ Each phase in this roadmap delivers an **end-to-end working slice of functionali
 
 ---
 
-### 🟡 Slice 006: 2D Visual Layout Canvas Editor
+### 🟢 Slice 006 [COMPLETED]: 2D Visual Layout Canvas Editor
 - **Objective**: Create an interactive 2D visual workspace where users drag and position WLED light strips according to their real-world physical room layout.
 - **Backend Deliverables**:
-  - API endpoints and SQLite persistence for `canvas_placements` (pos_x, pos_y, rotation, scale, length, geometry_type).
-  - Spatial coordinate mapping engine for multi-strip 2D sweep effects.
+  - [x] API endpoints and SQLite persistence for `canvas_placements` (pos_x, pos_y, rotation, scale, geometry).
+  - [x] Spatial coordinate placement engine & WebSocket `canvas_updated` broadcast.
 - **Frontend Deliverables**:
-  - Interactive HTML5 Canvas / WebGL 2D editor grid.
-  - Drag-and-drop strip placement, rotation handles, length adjustment, and strip vs matrix geometry selection.
-  - Live LED pixel mirroring preview (canvas pixels mirror physical WLED color output).
-  - Spatial sweep animation trigger (rainbow wave sweeping across 2D canvas coordinates).
+  - [x] Interactive 2D room map grid editor in Svelte 5 (`CanvasEditor.svelte`).
+  - [x] Drag-and-drop strip placement, 360° rotation handles, grid snap toggle (20px), and strip vs matrix vs ring geometry selection.
+  - [x] Live LED pixel mirroring preview (canvas pixels mirror physical WLED color output in real-time).
+  - [x] 2D Spatial sweep animation trigger (rainbow wave sweeping across 2D room coordinates).
 - **Acceptance Criteria**:
-  - User can drag strips onto 2D canvas, save positions, and reload page with layout preserved.
-  - Canvas pixels reflect real-time live LED colors of physical strips.
+  - [x] User can drag strips onto 2D canvas, save positions, and reload page with layout preserved.
+  - [x] Canvas pixels reflect real-time live LED colors of physical strips.
 
 ---
 

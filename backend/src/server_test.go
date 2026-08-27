@@ -18,6 +18,7 @@ func createTestServer(t *testing.T) (*Server, *httptest.Server) {
 	devMgr := NewDeviceManager(db, wledClient, hub)
 	groupMgr := NewGroupManager(db, wledClient, devMgr, hub)
 	dashboardMgr := NewDashboardManager(db, hub)
+	canvasMgr := NewCanvasManager(db, hub)
 	devMgr.SetDashboardManager(dashboardMgr)
 
 	srv := &Server{
@@ -27,6 +28,7 @@ func createTestServer(t *testing.T) (*Server, *httptest.Server) {
 		devMgr:       devMgr,
 		groupMgr:     groupMgr,
 		dashboardMgr: dashboardMgr,
+		canvasMgr:    canvasMgr,
 	}
 
 	mux := http.NewServeMux()

@@ -14,17 +14,19 @@ type App struct {
 	devMgr       *DeviceManager
 	groupMgr     *GroupManager
 	dashboardMgr *DashboardManager
+	canvasMgr    *CanvasManager
 	hub          *Hub
 	scanner      *MDNSScanner
 }
 
-func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, hub *Hub, scanner *MDNSScanner) *App {
+func NewApp(db *Database, wledClient *WLEDClient, devMgr *DeviceManager, groupMgr *GroupManager, dashboardMgr *DashboardManager, canvasMgr *CanvasManager, hub *Hub, scanner *MDNSScanner) *App {
 	return &App{
 		db:           db,
 		wledClient:   wledClient,
 		devMgr:       devMgr,
 		groupMgr:     groupMgr,
 		dashboardMgr: dashboardMgr,
+		canvasMgr:    canvasMgr,
 		hub:          hub,
 		scanner:      scanner,
 	}
@@ -168,4 +170,16 @@ func (a *App) AddDashboardPanel(title string) (*DashboardPanel, error) {
 
 func (a *App) DeleteDashboardPanel(id string) error {
 	return a.dashboardMgr.DeletePanel(id)
+}
+
+func (a *App) GetCanvasPlacements() ([]CanvasPlacement, error) {
+	return a.canvasMgr.GetPlacements(), nil
+}
+
+func (a *App) SaveCanvasPlacement(placement CanvasPlacement) error {
+	return a.canvasMgr.SavePlacement(placement)
+}
+
+func (a *App) BatchSaveCanvasPlacements(placements []CanvasPlacement) error {
+	return a.canvasMgr.BatchSavePlacements(placements)
 }

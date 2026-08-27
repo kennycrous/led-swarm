@@ -35,10 +35,13 @@
   import CreateGroupModal from '$lib/components/CreateGroupModal.svelte';
   import CaptureSceneModal from '$lib/components/CaptureSceneModal.svelte';
   import StripsManagement from '$lib/components/StripsManagement.svelte';
+  import CanvasEditor from '$lib/components/CanvasEditor.svelte';
+  import { getCanvasStore } from '$lib/stores/canvasStore.svelte.js';
 
   const store = getDeviceStore();
   const groupStore = getGroupStore();
   const dashboardStore = getDashboardStore();
+  const canvasStore = getCanvasStore();
 
   let activeTab = $state('dashboard');
   let masterPower = $state(true);
@@ -566,15 +569,31 @@
           onRename={(id, name) => store.renameDevice(id, name)}
         />
       {:else if activeTab === 'canvas'}
-        <!-- 2D ROOM VISUAL CANVAS PLACEHOLDER -->
-        <div class="glass-panel rounded-3xl p-12 text-center border border-dashed border-cyan-500/20 space-y-4">
-          <Grid class="w-12 h-12 text-cyan-400/40 mx-auto animate-pulse" />
-          <h3 class="text-lg font-bold font-mono text-slate-200">2D Room Canvas Workspace</h3>
-          <p class="text-xs font-mono text-slate-400 max-w-md mx-auto">
-            Visual 2D room canvas mapping for drag-and-drop spatial LED positioning, spatial light effects, and live
-            pixel mirroring.
-          </p>
-        </div>
+        <!-- 2D ROOM VISUAL CANVAS EDITOR -->
+        <CanvasEditor
+          devices={store.devices}
+          placements={canvasStore.placements}
+          onSavePlacements={() => canvasStore.savePlacements()}
+          onUpdatePlacement={(id, updates) => canvasStore.updatePlacement(id, updates)}
+          onTriggerSweep={() => {
+            if (store && store.onlineDevices) {
+              const originalEffects = store.onlineDevices.map((dev) => ({
+                id: dev.id,
+                fx: dev.state?.seg?.[0]?.fx ?? 0
+              }));
+
+              store.onlineDevices.forEach((dev) => {
+                store.setEffect(dev.id, 9);
+              });
+
+              setTimeout(() => {
+                originalEffects.forEach((item) => {
+                  store.setEffect(item.id, item.fx);
+                });
+              }, 3500);
+            }
+          }}
+        />
       {:else if activeTab === 'groups'}
         <!-- GROUPS & SCENES MANAGEMENT WORKSPACE -->
         <div class="space-y-6">
