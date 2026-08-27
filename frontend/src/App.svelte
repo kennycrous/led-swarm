@@ -41,12 +41,14 @@
   import RoomCard from '$lib/components/RoomCard.svelte';
   import { getCanvasStore } from '$lib/stores/canvasStore.svelte.js';
   import { getDDPStore } from '$lib/stores/ddpStore.svelte.js';
+  import { getAudioStore } from '$lib/stores/audioStore.svelte.js';
 
   const store = getDeviceStore();
   const groupStore = getGroupStore();
   const dashboardStore = getDashboardStore();
   const canvasStore = getCanvasStore();
   const ddpStore = getDDPStore();
+  const audioStore = getAudioStore();
 
   onMount(async () => {
     try {
@@ -217,7 +219,7 @@
 </script>
 
 <div
-  class="flex h-screen bg-[#06090e] text-slate-100 font-sans antialiased overflow-hidden selection:bg-cyan-500 selection:text-black"
+  class="flex h-screen cyber-bg-pattern text-slate-100 font-sans antialiased overflow-hidden selection:bg-cyan-500 selection:text-black"
 >
   <!-- CYBERPUNK SIDE NAVIGATION BAR -->
   <aside
@@ -432,6 +434,7 @@
                         cardSize={item.size}
                         showSizeToggle={true}
                         {ddpStore}
+                        {audioStore}
                         onTogglePower={(id) => store.togglePower(id)}
                         onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
                         onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
@@ -451,6 +454,7 @@
                         cardSize={item.size}
                         showSizeToggle={true}
                         {ddpStore}
+                        {audioStore}
                         onTogglePower={(id, pwr) =>
                           groupStore.setGroupState(
                             id,
@@ -488,6 +492,7 @@
                         cardSize={item.size}
                         showSizeToggle={true}
                         {ddpStore}
+                        {audioStore}
                         onEditLayout={() => {
                           canvasStore.selectRoom(item.data.id);
                           activeTab = 'canvas';
@@ -597,6 +602,7 @@
                           isPinned={true}
                           cardSize={item.size}
                           {ddpStore}
+                          {audioStore}
                           onTogglePower={(id) => store.togglePower(id)}
                           onSetBrightness={(id, bri) => store.setBrightness(id, bri)}
                           onSetColor={(id, r, g, b) => store.setColor(id, r, g, b)}
@@ -615,6 +621,7 @@
                           isPinned={true}
                           cardSize={item.size}
                           {ddpStore}
+                          {audioStore}
                           onTogglePower={(id, pwr) =>
                             groupStore.setGroupState(
                               id,
@@ -648,6 +655,7 @@
                           isPinned={true}
                           cardSize={item.size}
                           {ddpStore}
+                          {audioStore}
                           onEditLayout={() => {
                             canvasStore.selectRoom(item.data.id);
                             activeTab = 'canvas';
@@ -764,6 +772,7 @@
                   isPinned={dashboardStore.isPinned(room.id)}
                   cardSize={dashboardStore.getSize(room.id)}
                   {ddpStore}
+                  {audioStore}
                   onEditLayout={() => {
                     canvasStore.selectRoom(room.id);
                     activeTab = 'canvas';
@@ -826,6 +835,7 @@
                     isPinned={dashboardStore.isPinned(group.id)}
                     cardSize={dashboardStore.getSize(group.id)}
                     {ddpStore}
+                    {audioStore}
                     onTogglePower={(id, pwr) =>
                       groupStore.setGroupState(
                         id,

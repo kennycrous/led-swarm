@@ -39,8 +39,10 @@ func main() {
 	groupMgr := NewGroupManager(db, wledClient, devMgr, hub)
 	dashboardMgr := NewDashboardManager(db, hub)
 	canvasMgr := NewCanvasManager(db, hub)
+	audioEngine := NewAudioEngine()
+	hub.SetAudioEngine(audioEngine)
 	ddpStreamer := NewDDPStreamer()
-	ddpStreamer.SetManagers(devMgr, groupMgr, canvasMgr, hub)
+	ddpStreamer.SetManagers(devMgr, groupMgr, canvasMgr, audioEngine, hub)
 	devMgr.SetDashboardManager(dashboardMgr)
 
 	scanner := NewMDNSScanner(db, wledClient, devMgr)

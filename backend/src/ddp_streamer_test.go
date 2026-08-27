@@ -51,10 +51,11 @@ func TestDDPHeader_Marshalling(t *testing.T) {
 
 func TestDDPEffects_Generators(t *testing.T) {
 	ledCount := 30
-	effects := []string{"rainbow_wave", "digital_rain", "pulse_beads", "cyber_fire"}
+	effects := []string{"rainbow_wave", "digital_rain", "pulse_beads", "cyber_fire", "audio_bass_pulse", "audio_spectrum_waterfall", "audio_vu_meter", "audio_treble_sparkle"}
+	dummyAudio := AudioState{Active: true, Bass: 0.8, Peak: 0.5, Treble: 0.9}
 
 	for _, eff := range effects {
-		buf := GenerateDDPEffectFrame(eff, ledCount, 0.5, 1.0, 1.0)
+		buf := GenerateDDPEffectFrame(eff, ledCount, 0.5, 1.0, 1.0, dummyAudio)
 		if len(buf) != ledCount*3 {
 			t.Errorf("Effect %s returned buffer length %d, expected %d", eff, len(buf), ledCount*3)
 		}
