@@ -1,0 +1,14 @@
+README.md
+  h_e41d77f8309f5c 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f29b47f5408fe0d9f54b23d914a19f8eeaf11008",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
