@@ -1,0 +1,40 @@
+.docs/roadmap.md
+  h_e41d77f8309f5c 121,124-126,129-130,132-133,135-137
+backend/src/app.go
+  h_e41d77f8309f5c 11-18,21,23-29,142-159
+backend/src/dashboard_manager.go
+  h_e41d77f8309f5c 1-154
+backend/src/db.go
+  h_e41d77f8309f5c 11,30-40,111-121,336-398
+backend/src/device_manager.go
+  h_e41d77f8309f5c 16-23,44-47
+backend/src/main.go
+  h_e41d77f8309f5c 40-42,55,61
+backend/src/server.go
+  h_e41d77f8309f5c 15-22,25,27-34,59-65,315-413
+frontend/src/App.svelte
+  h_e41d77f8309f5c 21-26,30,37,41,49-108,110-112,115-119,123,135-182,185,187-192,195-196,199-200,207-208,215,218-219,235,319,322-326,328-331,333-336,339-344,346,348,351,353,360-380,382,385-390,393-444,449-536,568,570-586,617,619-628,634-643,650-735
+frontend/src/lib/components/CyberSelect.svelte
+  h_e41d77f8309f5c 1-70
+frontend/src/lib/components/DeviceCard.svelte
+  h_e41d77f8309f5c 2-3,9-10,16-18,24,52,55,57,59-123,125-134,141,150,164,180,182-190,192-205
+frontend/src/lib/components/GroupCard.svelte
+  h_e41d77f8309f5c 2-3,10-11,17-19,27,52,55,57-61,71-72,78,84,86-88,90,92-131,136,145,168,187,189-200,202-217
+frontend/src/lib/components/SceneCard.svelte
+  h_e41d77f8309f5c 2,6-7,9-11,15,40,42-46,48-49,57-59,61-63,65,68-106,109-120
+frontend/src/lib/components/StripsManagement.svelte
+  h_e41d77f8309f5c 1-137
+frontend/src/lib/stores/dashboardStore.svelte.js
+  h_e41d77f8309f5c 1-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "523f197aa4f54dcbeedc09a5427450381d6f22bb",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
