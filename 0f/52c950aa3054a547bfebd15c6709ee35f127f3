@@ -1,0 +1,18 @@
+backend/src/hub_test.go
+  h_e41d77f8309f5c 1-74
+backend/src/main_test.go
+  h_e41d77f8309f5c 1-34
+backend/src/mdns_test.go
+  h_e41d77f8309f5c 1-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0f52c950aa3054a547bfebd15c6709ee35f127f3",
+  "prompts": {},
+  "humans": {
+    "h_e41d77f8309f5c": {
+      "author": "Kenny Crous <kennycrous@oulook.com>"
+    }
+  }
+}
